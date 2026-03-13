@@ -31,8 +31,15 @@ if (!defined('AUTH_TOKEN') || AUTH_TOKEN === 'CHANGE_ME_TO_A_RANDOM_STRING') {
     die('Error: Please set AUTH_TOKEN in config.php');
 }
 
-define('DOY_WINDOW_DAYS', 400);
-define('DOY_UPDATE_INTERVAL', 86400); // 24 hours
+if (!defined('DOY_WINDOW_DAYS')) {
+    define('DOY_WINDOW_DAYS', 400);
+}
+if (!defined('DOY_PAST_DAYS')) {
+    define('DOY_PAST_DAYS', 30);
+}
+if (!defined('DOY_UPDATE_INTERVAL')) {
+    define('DOY_UPDATE_INTERVAL', 86400); // 24 hours
+}
 
 // ============================================================================
 // HELPERS (self-contained — no dependencies on the main application)
@@ -146,7 +153,7 @@ echo "X-WR-TIMEZONE:{$timezone}\r\n";
 echo "X-PUBLISHED-TTL:PT{$ttl_hours}H\r\n";
 echo "REFRESH-INTERVAL;VALUE=DURATION:PT{$ttl_hours}H\r\n";
 
-$start = strtotime('-30 days');
+$start = strtotime('-' . DOY_PAST_DAYS . ' days');
 $current = $start;
 $end = strtotime('+' . DOY_WINDOW_DAYS . ' days', strtotime('today'));
 

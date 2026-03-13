@@ -1,0 +1,36 @@
+<?php
+/**
+ * Configuration File Example
+ *
+ * Copy this file to config.php and set your own values.
+ *
+ * SECURITY WARNING:
+ * - Never commit config.php to version control
+ * - Use a cryptographically secure random string for AUTH_TOKEN
+ * - Keep your token secret
+ */
+
+// REQUIRED: Authentication token for calendar generation
+// Generate with: openssl rand -hex 32
+if (!defined('AUTH_TOKEN')) {
+    define('AUTH_TOKEN', 'CHANGE_ME_TO_A_RANDOM_STRING');
+}
+
+// OPTIONAL: Number of days to generate in calendar feed (future)
+// Default: 400 (~13 months, ensures a full year ahead is always visible)
+if (!defined('DOY_WINDOW_DAYS')) {
+    define('DOY_WINDOW_DAYS', 400);
+}
+
+// OPTIONAL: Number of past days to include in calendar feed
+// Default: 30 (one month of history)
+if (!defined('DOY_PAST_DAYS')) {
+    define('DOY_PAST_DAYS', 30);
+}
+
+// OPTIONAL: Update interval in seconds
+// How often calendar apps should check for updates
+// Default: 86400 (24 hours)
+if (!defined('DOY_UPDATE_INTERVAL')) {
+    define('DOY_UPDATE_INTERVAL', 86400);
+}
