@@ -61,6 +61,9 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
+      - name: Compute short SHA
+        id: sha
+        run: echo "short=${GITHUB_SHA:0:7}" >> "$GITHUB_OUTPUT"
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -71,11 +74,11 @@ jobs:
       - name: Mirror to Artifact Registry
         run: |
           docker buildx imagetools create \
-            --tag ${{ env.AR_IMAGE }}:${{ github.sha }} \
+            --tag ${{ env.AR_IMAGE }}:sha-${{ steps.sha.outputs.short }} \
             --tag ${{ env.AR_IMAGE }}:latest \
-            ghcr.io/${{ github.repository_owner }}/day-of-year-calendar:${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/day-of-year-calendar:sha-${{ steps.sha.outputs.short }}
       - uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: day-of-year-calendar
-          image: ${{ env.AR_IMAGE }}:${{ github.sha }}
+          image: ${{ env.AR_IMAGE }}:sha-${{ steps.sha.outputs.short }}
           region: europe-west1
