@@ -10,4 +10,13 @@ WORKDIR /var/www/html
 # Copy application source
 COPY --chown=www-data:www-data day-of-year-calendar.php ./
 
-# config/config.php is injected at runtime via volume mount
+# Entrypoint: wires Apache to the $PORT env var injected by Cloud Run (default 8080)
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# AUTH_TOKEN and other settings can be injected as environment variables
+# (Cloud Run env vars or Secret Manager). config/config.php still works via volume mount.
+ENV PORT=8080
+EXPOSE 8080
+
+CMD ["/usr/local/bin/docker-entrypoint.sh"]
