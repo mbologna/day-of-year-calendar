@@ -16,6 +16,9 @@ permissions:
   attestations: write
   security-events: write
 
+env:
+  AR_IMAGE: europe-west8-docker.pkg.dev/day-of-year-cal/calendar/app
+
 jobs:
   lint:
     name: Lint PHP
@@ -29,8 +32,21 @@ jobs:
           php-version: "8.2"
       - run: php -l day-of-year-calendar.php
 
+  test:
+    needs: [lint]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
+        with:
+          php-version: "8.2"
+      - run: composer install --no-interaction --prefer-dist
+      - run: vendor/bin/phpunit
+
   docker:
-    needs: lint
+    needs: [lint, test]
     uses: mbologna/.github/.github/workflows/docker-build-scan-push.yml@ac8d6f1d386411c72e4bf328ba8e0df53f751ed6 # main
     with:
       image_name: day-of-year-calendar
@@ -39,3 +55,27 @@ jobs:
       enable_cosign: true
       enable_release_drafter: true
     secrets: inherit
+
+  deploy:
+    needs: [docker]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker europe-west8-docker.pkg.dev --quiet
+      - name: Mirror to Artifact Registry
+        run: |
+          docker buildx imagetools create \
+            --tag ${{ env.AR_IMAGE }}:${{ github.sha }} \
+            --tag ${{ env.AR_IMAGE }}:latest \
+            ghcr.io/${{ github.repository_owner }}/day-of-year-calendar:${{ github.sha }}
+      - uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: day-of-year-calendar
+          image: ${{ env.AR_IMAGE }}:${{ github.sha }}
+          region: europe-west8

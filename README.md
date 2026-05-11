@@ -1,74 +1,85 @@
 # Day of Year Calendar
 
-A self-contained PHP script that generates an iCalendar (`.ics`) feed where each day shows its number within the year — e.g. **Day 42 of 365** — as an all-day event.
+A self-contained PHP script that generates an iCalendar (`.ics`) feed where each day shows its position in the year as an all-day event.
 
-Subscribe to it from any calendar application (Google Calendar, Apple Calendar, Outlook, etc.) using a URL.
+**Event format:**
+- Calendar grid: `124/365 · 34%`
+- Event detail: `Day 124 of 365 · 34% complete — 241 days remaining · Week 20 · 2026`
+
+Subscribe from any calendar app (Google Calendar, Apple Calendar, Outlook, etc.) using a URL.
 
 ## Requirements
 
 - PHP 8.2+
-- A web server (Apache, nginx, Caddy, or PHP's built-in server for testing)
+- A web server (Apache, nginx, or PHP's built-in server for testing)
 
-## Installation
+## Configuration
 
-1. **Deploy the file** — copy `day-of-year-calendar.php` to your web server's document root (or any public directory).
+The `AUTH_TOKEN` can be set two ways — pick one:
 
-2. **Create the config file** — the script expects `config/config.php` relative to its own directory:
-
-   ```
-   day-of-year-calendar/
-   ├── day-of-year-calendar.php
-   └── config/
-       └── config.php
-   ```
-
-   Create `config/config.php` with at minimum:
-
-   ```php
-   <?php
-   define('AUTH_TOKEN', 'your-secret-token-here');
-   ```
-
-   Generate a secure token:
-
-   ```bash
-   openssl rand -hex 32
-   ```
-
-3. **Subscribe** — use the following URL pattern in your calendar app:
-
-   ```
-   https://your-server.example.com/day-of-year-calendar.php?token=YOUR_TOKEN
-   ```
-
-## URL Parameters
-
-| Parameter  | Required | Default       | Description                                      |
-|------------|----------|---------------|--------------------------------------------------|
-| `token`    | Yes      | —             | Authentication token (must match `AUTH_TOKEN`)   |
-| `zone`     | No       | `Europe/Rome` | PHP timezone identifier (e.g. `America/New_York`)|
-| `location` | No       | —             | Display name appended to the calendar title      |
-
-### Example URLs
-
-```
-# Basic
-https://your-server.example.com/day-of-year-calendar.php?token=abc123
-
-# With timezone and location name
-https://your-server.example.com/day-of-year-calendar.php?token=abc123&zone=America/New_York&location=New+York
+**Environment variable** (Cloud Run, Docker):
+```bash
+export AUTH_TOKEN=$(openssl rand -hex 32)
 ```
 
-## Calendar Output
+**Config file** (self-hosted):
+```
+day-of-year-calendar/
+├── day-of-year-calendar.php
+├── src/
+└── config/
+    └── config.php   ← copy from config.example.php
+```
 
-- One **all-day event per day** for the next 365 days (starting today)
-- Event title: `Day 42 of 365`
-- Feed refreshes every 24 hours
-- Leap years automatically show `Day X of 366`
+```php
+<?php
+define('AUTH_TOKEN', 'your-secret-token-here');
+```
 
-## Local Testing
+## Deployment
+
+### Docker / Cloud Run
 
 ```bash
-php -S localhost:8000
-# Then open: http://localhost:8000/day-of-year-calendar.php?token=YOUR_TOKEN
+docker build -t day-of-year-calendar .
+docker run -p 8080:8080 -e AUTH_TOKEN=your-token day-of-year-calendar
 ```
+
+Infrastructure is managed via Terraform in `../infra/terraform/day-of-year-calendar/`. A push to `main` builds, mirrors to Artifact Registry, and deploys to Cloud Run automatically.
+
+### Self-hosted (Apache / nginx)
+
+1. Copy `day-of-year-calendar.php` and `src/` to your document root
+2. Create `config/config.php` with `AUTH_TOKEN`
+3. Point your web server at `day-of-year-calendar.php` as the directory index
+
+## Subscribing
+
+```
+https://your-host/day-of-year-calendar.php?token=YOUR_TOKEN
+```
+
+| Parameter  | Required | Default       | Description                                       |
+|------------|----------|---------------|---------------------------------------------------|
+| `token`    | Yes      | —             | Must match `AUTH_TOKEN`                           |
+| `zone`     | No       | `Europe/Rome` | PHP timezone identifier (e.g. `America/New_York`) |
+| `location` | No       | —             | Appended to the calendar title                    |
+
+## Local development
+
+```bash
+# Start a local server
+AUTH_TOKEN=test php -S localhost:8000
+
+# Fetch the feed
+curl "http://localhost:8000/day-of-year-calendar.php?token=test"
+```
+
+## Testing
+
+```bash
+composer install
+vendor/bin/phpunit
+```
+
+Tests cover all pure helper functions in `src/functions.php`: leap year detection, token verification, timezone/text sanitisation, RFC 5545 line folding, and event string formatting.

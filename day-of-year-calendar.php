@@ -5,11 +5,12 @@ declare(strict_types=1);
 /**
  * Day of Year iCalendar Generator
  *
- * Generates a 365-day iCalendar feed where each day has an all-day event
- * showing the day number: "Day X of Y".
+ * Generates an iCalendar feed where each day has an all-day event
+ * showing its position in the year: "124/365 · 34%".
  *
  * Standalone application — can be moved to any directory.
- * Requires: config/config.php with AUTH_TOKEN defined.
+ * Configuration via AUTH_TOKEN environment variable (Cloud Run)
+ * or config/config.php (self-hosted).
  *
  * URL parameters:
  *   token    – authentication token (required)
@@ -19,16 +20,29 @@ declare(strict_types=1);
 
 // ============================================================================
 // CONFIGURATION
+// Environment variables take precedence (Cloud Run / container deployments).
+// config/config.php is loaded afterwards as an override for local/self-hosted use.
 // ============================================================================
 
-$configFile = __DIR__ . '/config/config.php';
-if (!file_exists($configFile)) {
-    die('Error: config/config.php not found. Copy config/config.example.php and set AUTH_TOKEN.');
+foreach ([
+    'AUTH_TOKEN'        => fn($v) => $v,
+    'DOY_WINDOW_DAYS'   => fn($v) => (int) $v,
+    'DOY_PAST_DAYS'     => fn($v) => (int) $v,
+    'DOY_UPDATE_INTERVAL' => fn($v) => (int) $v,
+] as $name => $cast) {
+    $env = getenv($name);
+    if ($env !== false && !defined($name)) {
+        define($name, $cast($env));
+    }
 }
-require_once $configFile;
+
+$configFile = __DIR__ . '/config/config.php';
+if (file_exists($configFile)) {
+    require_once $configFile;
+}
 
 if (!defined('AUTH_TOKEN') || AUTH_TOKEN === 'CHANGE_ME_TO_A_RANDOM_STRING') {
-    die('Error: Please set AUTH_TOKEN in config.php');
+    die('Error: AUTH_TOKEN not set. Use the AUTH_TOKEN environment variable or config/config.php.');
 }
 
 if (!defined('DOY_WINDOW_DAYS')) {
@@ -42,64 +56,10 @@ if (!defined('DOY_UPDATE_INTERVAL')) {
 }
 
 // ============================================================================
-// HELPERS (self-contained — no dependencies on the main application)
+// HELPERS
 // ============================================================================
 
-function doy_verify_token(string $provided): bool
-{
-    return hash_equals(AUTH_TOKEN, $provided);
-}
-
-function doy_sanitize_timezone(string $value): string
-{
-    return in_array($value, timezone_identifiers_list(), true) ? $value : 'Europe/Rome';
-}
-
-function doy_sanitize_text(string $value, int $maxLength = 200): string
-{
-    $clean = strip_tags($value);
-    $clean = str_replace(["\r\n", "\r", "\n"], ' ', $clean);
-    return substr($clean, 0, $maxLength);
-}
-
-/**
- * Escape and fold a DESCRIPTION value per RFC 5545.
- */
-function doy_format_description(string $text): string
-{
-    $text = str_replace('\\', '\\\\', $text);
-    $text = str_replace(["\r\n", "\r", "\n"], '\n', $text);
-    $text = str_replace([',', ';'], ['\\,', '\\;'], $text);
-
-    $line = 'DESCRIPTION:' . $text;
-    $result = '';
-    $current_line = '';
-    $byte_count = 0;
-    $char_count = mb_strlen($line, 'UTF-8');
-
-    for ($i = 0; $i < $char_count; $i++) {
-        $char = mb_substr($line, $i, 1, 'UTF-8');
-        $char_bytes = strlen($char);
-        if ($byte_count + $char_bytes > 75) {
-            $result .= $current_line . "\r\n";
-            $current_line = ' ' . $char;
-            $byte_count = 1 + $char_bytes;
-        } else {
-            $current_line .= $char;
-            $byte_count += $char_bytes;
-        }
-    }
-
-    return $result . $current_line . "\r\n";
-}
-
-/**
- * Return true when $year is a leap year.
- */
-function doy_is_leap_year(int $year): bool
-{
-    return ($year % 4 === 0 && $year % 100 !== 0) || $year % 400 === 0;
-}
+require_once __DIR__ . '/src/functions.php';
 
 // ============================================================================
 // SECURITY HEADERS
@@ -162,7 +122,13 @@ while ($current <= $end) {
     $dayOfYear = (int) date('z', $current) + 1; // date('z') is 0-indexed
     $totalDays = doy_is_leap_year($year) ? 366 : 365;
 
-    $summary = "Day {$dayOfYear} of {$totalDays}";
+    $percent  = (int) round($dayOfYear / $totalDays * 100);
+    $daysLeft = $totalDays - $dayOfYear;
+    $isoWeek  = (int) date('W', $current);
+
+    $summary     = doy_event_summary($dayOfYear, $totalDays, $percent);
+    $description = doy_event_description($dayOfYear, $totalDays, $percent, $daysLeft, $isoWeek, $year);
+
     $dateStr  = date('Ymd', $current);
     $nextDateStr = date('Ymd', strtotime('+1 day', $current));
 
@@ -175,7 +141,7 @@ while ($current <= $end) {
     echo "DTSTART;VALUE=DATE:{$dateStr}\r\n";
     echo "DTEND;VALUE=DATE:{$nextDateStr}\r\n";
     echo "SUMMARY:{$summary}\r\n";
-    echo doy_format_description("{$summary} — {$year}");
+    echo doy_format_description($description);
     echo "TRANSP:TRANSPARENT\r\n";
     echo "END:VEVENT\r\n";
 
