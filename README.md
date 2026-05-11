@@ -10,7 +10,7 @@ Subscribe from any calendar app (Google Calendar, Apple Calendar, Outlook, etc.)
 
 ## Requirements
 
-- PHP 8.2+
+- PHP 8.5+
 - A web server (Apache, nginx, or PHP's built-in server for testing)
 
 ## Configuration
