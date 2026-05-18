@@ -10,6 +10,7 @@ WORKDIR /var/www/html
 # Copy application source
 COPY --chown=www-data:www-data day-of-year-calendar.php ./
 COPY --chown=www-data:www-data src/ ./src/
+COPY --chown=www-data:www-data assets/ ./assets/
 
 # Entrypoint: wires Apache to the $PORT env var injected by Cloud Run (default 8080)
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh

@@ -53,6 +53,16 @@ Infrastructure is managed via Terraform in `../infra/terraform/day-of-year-calen
 2. Create `config/config.php` with `AUTH_TOKEN`
 3. Point your web server at `day-of-year-calendar.php` as the directory index
 
+## Web interface & URL builder
+
+Opening the root URL without a token renders a password-protected form for building the subscription URL. Enter the token as password, choose a timezone and an optional location name, and click **Generate Subscription URL** to get the webcal:// and https:// subscription links.
+
+Health check (no auth required — returns JSON):
+
+```
+https://your-host/?health=1
+```
+
 ## Subscribing
 
 ```
@@ -70,6 +80,9 @@ https://your-host/day-of-year-calendar.php?token=YOUR_TOKEN
 ```bash
 # Start a local server
 AUTH_TOKEN=test php -S localhost:8000
+
+# Health check
+curl "http://localhost:8000/?health=1"
 
 # Fetch the feed
 curl "http://localhost:8000/day-of-year-calendar.php?token=test"
