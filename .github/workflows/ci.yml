@@ -16,9 +16,6 @@ permissions:
   attestations: write
   security-events: write
 
-env:
-  AR_IMAGE: europe-west1-docker.pkg.dev/day-of-year-cal/calendar/app
-
 jobs:
   lint:
     name: Lint PHP
@@ -58,27 +55,11 @@ jobs:
 
   deploy:
     needs: [docker]
-    runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - name: Compute short SHA
-        id: sha
-        run: echo "short=${GITHUB_SHA:0:7}" >> "$GITHUB_OUTPUT"
-      - uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-      - uses: google-github-actions/setup-gcloud@v2
-      - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker europe-west1-docker.pkg.dev --quiet
-      - name: Mirror to Artifact Registry
-        run: |
-          docker buildx imagetools create \
-            --tag ${{ env.AR_IMAGE }}:sha-${{ steps.sha.outputs.short }} \
-            --tag ${{ env.AR_IMAGE }}:latest \
-            ghcr.io/${{ github.repository_owner }}/day-of-year-calendar:sha-${{ steps.sha.outputs.short }}
-      - uses: google-github-actions/deploy-cloudrun@v2
-        with:
-          service: day-of-year-calendar
-          image: ${{ env.AR_IMAGE }}:sha-${{ steps.sha.outputs.short }}
-          region: europe-west1
+    uses: mbologna/.github/.github/workflows/gcp-deploy.yml@main
+    with:
+      image_name: day-of-year-calendar
+      ar_image: europe-west1-docker.pkg.dev/day-of-year-cal/calendar/app
+      deploy_type: service
+      deploy_name: day-of-year-calendar
+    secrets: inherit

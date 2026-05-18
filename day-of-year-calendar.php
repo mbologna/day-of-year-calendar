@@ -72,6 +72,58 @@ if (php_sapi_name() !== 'cli') {
 }
 
 // ============================================================================
+// HEALTH CHECK
+// ============================================================================
+
+if (isset($_GET['health'])) {
+    header('Content-Type: application/json');
+    echo json_encode([
+        'status'    => 'ok',
+        'version'   => '1.0',
+        'php'       => PHP_VERSION,
+        'timestamp' => time(),
+    ]);
+    exit;
+}
+
+// ============================================================================
+// URL GENERATION FORM (POST)
+// ============================================================================
+
+if (isset($_POST['generate_url']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $password = $_POST['password'] ?? '';
+    if (!doy_verify_token($password)) {
+        $error = 'Invalid password';
+    } else {
+        $zone     = doy_sanitize_timezone($_POST['zone'] ?? 'Europe/Rome');
+        $location = doy_sanitize_text($_POST['location'] ?? '');
+        $params   = ['token' => AUTH_TOKEN];
+        if ($zone !== 'Europe/Rome') {
+            $params['zone'] = $zone;
+        }
+        if ($location !== '') {
+            $params['location'] = $location;
+        }
+        $protocol         = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+        $host             = $_SERVER['HTTP_HOST'];
+        $script           = $_SERVER['SCRIPT_NAME'];
+        $subscription_url = $protocol . '://' . $host . $script . '?' . http_build_query($params);
+        $webcal_url       = str_replace(['https://', 'http://'], 'webcal://', $subscription_url);
+    }
+    require_once __DIR__ . '/assets/index.html.php';
+    exit;
+}
+
+// ============================================================================
+// WEB INTERFACE (no token → show URL builder)
+// ============================================================================
+
+if (!isset($_GET['token'])) {
+    require_once __DIR__ . '/assets/index.html.php';
+    exit;
+}
+
+// ============================================================================
 // TOKEN CHECK
 // ============================================================================
 
