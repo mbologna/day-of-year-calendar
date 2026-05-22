@@ -59,7 +59,7 @@ jobs:
     uses: mbologna/.github/.github/workflows/gcp-deploy.yml@aeb30e0b1fc4aef2b2c92b84dd07b87ab5e3ab6b # main
     with:
       image_name: day-of-year-calendar
-      ar_image: europe-west1-docker.pkg.dev/day-of-year-cal/calendar/app
+      ar_image: us-central1-docker.pkg.dev/day-of-year-cal/calendar/app
       deploy_type: service
       deploy_name: day-of-year-calendar
     secrets: inherit
