@@ -62,4 +62,5 @@ jobs:
       ar_image: us-central1-docker.pkg.dev/day-of-year-cal/calendar/app
       deploy_type: service
       deploy_name: day-of-year-calendar
+      region: us-central1
     secrets: inherit
