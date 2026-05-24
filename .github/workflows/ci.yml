@@ -44,7 +44,7 @@ jobs:
 
   docker:
     needs: [lint, test]
-    uses: mbologna/.github/.github/workflows/docker-build-scan-push.yml@829a974d8aa0bc51c93c7433d8b5d9483466ae0e # main
+    uses: mbologna/.github/.github/workflows/docker-ci.yml@829a974d8aa0bc51c93c7433d8b5d9483466ae0e # main
     with:
       image_name: day-of-year-calendar
       push_to_dockerhub: false
