@@ -15,7 +15,7 @@ Subscribe from any calendar app (Google Calendar, Apple Calendar, Outlook, etc.)
 
 ## Configuration
 
-The `AUTH_TOKEN` can be set two ways — pick one:
+The `AUTH_TOKEN` can be set two ways, pick one:
 
 **Environment variable** (Cloud Run, Docker):
 ```bash
@@ -57,7 +57,7 @@ Infrastructure is managed via Terraform in `../infra/terraform/day-of-year-calen
 
 Opening the root URL without a token renders a password-protected form for building the subscription URL. Enter the token as password, choose a timezone and an optional location name, and click **Generate Subscription URL** to get the webcal:// and https:// subscription links.
 
-Health check (no auth required — returns JSON):
+Health check (no auth required, returns JSON):
 
 ```
 https://your-host/?health=1
@@ -71,9 +71,9 @@ https://your-host/day-of-year-calendar.php?token=YOUR_TOKEN
 
 | Parameter  | Required | Default       | Description                                       |
 |------------|----------|---------------|---------------------------------------------------|
-| `token`    | Yes      | —             | Must match `AUTH_TOKEN`                           |
+| `token`    | Yes      | (none)        | Must match `AUTH_TOKEN`                           |
 | `zone`     | No       | `Europe/Rome` | PHP timezone identifier (e.g. `America/New_York`) |
-| `location` | No       | —             | Appended to the calendar title                    |
+| `location` | No       | (none)        | Appended to the calendar title                    |
 
 ## Local development
 
