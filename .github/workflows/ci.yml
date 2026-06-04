@@ -17,34 +17,17 @@ permissions:
   security-events: write
 
 jobs:
-  lint:
-    name: Lint PHP
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-      - uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # v2
-        with:
-          php-version: "8.5"
-      - run: php -l day-of-year-calendar.php
-
-  test:
-    needs: [lint]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-      - uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # v2
-        with:
-          php-version: "8.5"
-      - run: composer install --no-interaction --prefer-dist
-      - run: vendor/bin/phpunit
+  php:
+    uses: mbologna/.github/.github/workflows/php-ci.yml@4df74894bb7396d6abbf3baf4bcdf8ec9b9bed39 # main
+    with:
+      php_version: "8.5"
+      enable_lint: true
+      lint_tools: ""
+      lint_command: php -l day-of-year-calendar.php
 
   docker:
-    needs: [lint, test]
-    uses: mbologna/.github/.github/workflows/docker-ci.yml@efd33bde6e56c880365e83aab71f3242f40bc7f3 # main
+    needs: [php]
+    uses: mbologna/.github/.github/workflows/docker-ci.yml@4df74894bb7396d6abbf3baf4bcdf8ec9b9bed39 # main
     with:
       image_name: day-of-year-calendar
       push_to_dockerhub: true
@@ -56,7 +39,7 @@ jobs:
   deploy:
     needs: [docker]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    uses: mbologna/.github/.github/workflows/gcp-deploy.yml@efd33bde6e56c880365e83aab71f3242f40bc7f3 # main
+    uses: mbologna/.github/.github/workflows/gcp-deploy.yml@4df74894bb7396d6abbf3baf4bcdf8ec9b9bed39 # main
     with:
       image_name: day-of-year-calendar
       deploy_type: service
