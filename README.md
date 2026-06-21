@@ -4,7 +4,7 @@ A self-contained PHP script that generates an iCalendar (`.ics`) feed where each
 
 **Event format:**
 - Calendar grid: `124/365 · 34%`
-- Event detail: `Day 124 of 365 · 34% complete — 241 days remaining · Week 20 · 2026`
+- Event detail: `Day 124 of 365 · 34% complete, 241 days remaining · Week 20 · 2026`
 
 Subscribe from any calendar app (Google Calendar, Apple Calendar, Outlook, etc.) using a URL.
 
