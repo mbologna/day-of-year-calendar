@@ -34,7 +34,6 @@ jobs:
     with:
       image_name: day-of-year-calendar
       push_to_dockerhub: true
-      enable_grype: true
       enable_cosign: true
       enable_release_drafter: true
     secrets: inherit
