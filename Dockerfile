@@ -1,4 +1,4 @@
-FROM php:8.5-apache@sha256:eacc0d98992683cb46e4f8f44b2418a0323855dc8b59d32dc54f7a9b90a966dd
+FROM php:8.5-apache@sha256:67c0ad3e1c7e88bae9956fdbc8c86fc5b44c46525a81a5367b91204904d37340
 
 # Configure document root: use app entrypoint as directory index, disable directory listing
 RUN printf '<Directory /var/www/html>\n    DirectoryIndex day-of-year-calendar.php\n    Options -Indexes\n</Directory>\n' \
