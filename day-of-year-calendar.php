@@ -68,7 +68,8 @@ require_once __DIR__ . '/src/functions.php';
 if (php_sapi_name() !== 'cli') {
     header('X-Content-Type-Options: nosniff');
     header('X-Frame-Options: DENY');
-    header('X-XSS-Protection: 1; mode=block');
+    header('Referrer-Policy: no-referrer');
+    header("Content-Security-Policy: default-src 'none'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'none'; form-action 'self'");
 }
 
 // ============================================================================
@@ -165,7 +166,7 @@ echo "X-WR-TIMEZONE:{$timezone}\r\n";
 echo "X-PUBLISHED-TTL:PT{$ttl_hours}H\r\n";
 echo "REFRESH-INTERVAL;VALUE=DURATION:PT{$ttl_hours}H\r\n";
 
-$start = strtotime('-' . DOY_PAST_DAYS . ' days');
+$start = strtotime('-' . DOY_PAST_DAYS . ' days', strtotime('today'));
 $current = $start;
 $end = strtotime('+' . DOY_WINDOW_DAYS . ' days', strtotime('today'));
 
