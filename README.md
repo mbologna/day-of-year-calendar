@@ -1,5 +1,8 @@
 # Day of Year Calendar
 
+[![CI](https://github.com/mbologna/day-of-year-calendar/actions/workflows/ci.yml/badge.svg)](https://github.com/mbologna/day-of-year-calendar/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 A self-contained PHP script that generates an iCalendar (`.ics`) feed where each day shows its position in the year as an all-day event.
 
 **Event format:**
@@ -95,4 +98,8 @@ composer install
 vendor/bin/phpunit
 ```
 
-Tests cover all pure helper functions in `src/functions.php`: leap year detection, token verification, timezone/text sanitisation, RFC 5545 line folding, and event string formatting.
+Tests cover all pure helper functions in `src/functions.php`: leap year detection, token verification, timezone/text sanitisation, RFC 5545 line folding, and event string formatting. `tests/CalendarFeedTest.php` additionally exercises `day-of-year-calendar.php` end to end over HTTP (token rejection, feed output, health check).
+
+## License
+
+MIT — see [LICENSE](LICENSE).
