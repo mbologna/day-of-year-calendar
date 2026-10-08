@@ -102,4 +102,4 @@ Tests cover all pure helper functions in `src/functions.php`: leap year detectio
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT, see [LICENSE](LICENSE).
