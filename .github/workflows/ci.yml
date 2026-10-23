@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   php:
-    uses: mbologna/.github/.github/workflows/php-ci.yml@ab388d6723a92a7ea356db8e42f21a386fc1583b # main
+    uses: mbologna/.github/.github/workflows/php-ci.yml@923ac5020fe5fd53ac865cd46d335a02ae0413a3 # main
     with:
       php_version: "8.5"
       enable_lint: true
@@ -31,7 +31,7 @@ jobs:
 
   docker:
     needs: [php]
-    uses: mbologna/.github/.github/workflows/docker-ci.yml@ab388d6723a92a7ea356db8e42f21a386fc1583b # main
+    uses: mbologna/.github/.github/workflows/docker-ci.yml@923ac5020fe5fd53ac865cd46d335a02ae0413a3 # main
     with:
       image_name: day-of-year-calendar
       push_to_dockerhub: true
@@ -47,7 +47,7 @@ jobs:
       contents: write
       actions: write
     needs: [docker]
-    uses: mbologna/.github/.github/workflows/auto-release.yml@ab388d6723a92a7ea356db8e42f21a386fc1583b # main
+    uses: mbologna/.github/.github/workflows/auto-release.yml@923ac5020fe5fd53ac865cd46d335a02ae0413a3 # main
     with:
       strategy: docker
       image: docker.io/mbologna/day-of-year-calendar
@@ -56,7 +56,7 @@ jobs:
   deploy:
     needs: [docker]
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'schedule'
-    uses: mbologna/.github/.github/workflows/gcp-deploy.yml@ab388d6723a92a7ea356db8e42f21a386fc1583b # main
+    uses: mbologna/.github/.github/workflows/gcp-deploy.yml@923ac5020fe5fd53ac865cd46d335a02ae0413a3 # main
     with:
       image_name: day-of-year-calendar
       deploy_type: service
@@ -66,7 +66,7 @@ jobs:
 
   cache-cleanup:
     if: github.event_name == 'schedule'
-    uses: mbologna/.github/.github/workflows/cache-cleanup.yml@ab388d6723a92a7ea356db8e42f21a386fc1583b # main
+    uses: mbologna/.github/.github/workflows/cache-cleanup.yml@923ac5020fe5fd53ac865cd46d335a02ae0413a3 # main
     with:
       max_age_days: 7
     permissions:
