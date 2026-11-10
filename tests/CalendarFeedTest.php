@@ -82,7 +82,8 @@ class CalendarFeedTest extends TestCase
     {
         [$body, $headers] = self::fetch('?token=wrong-token');
         $this->assertStringContainsString('403', $headers[0]);
-        $this->assertStringContainsString('Invalid authentication token', $body);
+        $this->assertSame('Invalid access token', $body);
+        $this->assertContains('Content-Type: text/plain; charset=utf-8', $headers);
         $this->assertStringNotContainsString('BEGIN:VCALENDAR', $body);
     }
 

@@ -46,6 +46,7 @@ if (file_exists($configFile)) {
 
 if (!defined('AUTH_TOKEN') || AUTH_TOKEN === 'CHANGE_ME_TO_A_RANDOM_STRING') {
     http_response_code(500);
+    header('Content-Type: text/plain; charset=utf-8');
     die('Server misconfigured: AUTH_TOKEN is not set, or still has the example value. '
         . 'Set the AUTH_TOKEN environment variable, or set it in config/config.php.');
 }
@@ -131,14 +132,15 @@ if (!isset($_GET['token'])) {
 $token = $_GET['token'] ?? '';
 if (!doy_verify_token($token)) {
     http_response_code(403);
-    die('Invalid authentication token');
+    header('Content-Type: text/plain; charset=utf-8');
+    die('Invalid access token');
 }
 
 // ============================================================================
 // PARAMETERS
 // ============================================================================
 
-$timezone = doy_sanitize_timezone($_GET['zone'] ?? 'Europe/Rome');
+$timezone = doy_sanitize_timezone($_GET['zone'] ?? DOY_DEFAULT_TIMEZONE);
 $location_name = doy_sanitize_text($_GET['location'] ?? '');
 
 date_default_timezone_set($timezone);
