@@ -187,14 +187,62 @@ class FunctionsTest extends TestCase
 
     // ── doy_day_stats ────────────────────────────────────────────────────────
 
-    public function testDayStatsUsesIsoWeekYear(): void
+    private static function statsFor(string $date): array
     {
         date_default_timezone_set('UTC');
-        $stats = doy_day_stats(strtotime('2027-01-01'));
+        return doy_day_stats(strtotime($date));
+    }
+
+    public function testDayStatsUsesIsoWeekYear(): void
+    {
+        $stats = self::statsFor('2027-01-01');
         $this->assertSame(1, $stats['day']);
         $this->assertSame(53, $stats['week']);
         $this->assertSame(2026, $stats['weekYear']);
         $this->assertSame(2027, $stats['year']);
+    }
+
+    public static function quarterProvider(): array
+    {
+        return [
+            'first day of Q1'     => ['2026-01-01', 1, 1,  90],
+            'last day of leap Q1' => ['2028-03-31', 1, 91, 91],
+            'first day of Q2'     => ['2026-04-01', 2, 1,  91],
+            'first day of Q4'     => ['2026-10-01', 4, 1,  92],
+            'last day of Q4'      => ['2026-12-31', 4, 92, 92],
+        ];
+    }
+
+    #[DataProvider('quarterProvider')]
+    public function testDayStatsQuarter(string $date, int $quarter, int $quarterDay, int $quarterTotal): void
+    {
+        $stats = self::statsFor($date);
+        $this->assertSame($quarter, $stats['quarter']);
+        $this->assertSame($quarterDay, $stats['quarterDay']);
+        $this->assertSame($quarterTotal, $stats['quarterTotal']);
+    }
+
+    // ── doy_milestone ────────────────────────────────────────────────────────
+
+    public static function milestoneProvider(): array
+    {
+        return [
+            'first day'            => ['2026-01-01', 'First day of 2026'],
+            'leap day'             => ['2028-02-29', 'Leap day'],
+            'halfway, common'      => ['2026-07-02', 'Halfway through 2026'],
+            'halfway, leap'        => ['2028-07-01', 'Halfway through 2028'],
+            'day before halfway'   => ['2026-07-01', null],
+            'last day'             => ['2026-12-31', null],
+            'ordinary day'         => ['2026-05-04', null],
+            '1 March, common year' => ['2026-03-01', null],
+        ];
+    }
+
+    #[DataProvider('milestoneProvider')]
+    public function testMilestone(string $date, ?string $expected): void
+    {
+        $stats = self::statsFor($date);
+        $this->assertSame($expected, doy_milestone($stats['day'], $stats['total'], $stats['year']));
     }
 
     // ── doy_progress_bar ─────────────────────────────────────────────────────
@@ -211,27 +259,36 @@ class FunctionsTest extends TestCase
     public function testEventDescriptionFormat(): void
     {
         $this->assertSame(
-            "Day 124 of 365\n" . doy_progress_bar(33) . " 33%\n241 days left in 2026\nWeek 20",
-            doy_event_description(124, 365, 33, 241, 20, 2026, 2026)
+            "Day 124 of 365\n" . doy_progress_bar(33) . " 33%\n241 days left in 2026\nQ2 · day 34 of 91\nWeek 19",
+            doy_event_description(self::statsFor('2026-05-04'))
+        );
+    }
+
+    public function testEventDescriptionLeadsWithMilestone(): void
+    {
+        $this->assertSame(
+            "Halfway through 2026\nDay 183 of 365\n" . doy_progress_bar(50)
+                . " 50%\n182 days left in 2026\nQ3 · day 2 of 92\nWeek 27",
+            doy_event_description(self::statsFor('2026-07-02'))
         );
     }
 
     public function testEventDescriptionSingularDayLeft(): void
     {
-        $desc = doy_event_description(364, 365, 99, 1, 53, 2026, 2026);
+        $desc = doy_event_description(self::statsFor('2026-12-30'));
         $this->assertStringContainsString('1 day left in 2026', $desc);
     }
 
     public function testEventDescriptionLastDayOfYear(): void
     {
-        $desc = doy_event_description(365, 365, 100, 0, 53, 2026, 2026);
+        $desc = doy_event_description(self::statsFor('2026-12-31'));
         $this->assertStringContainsString('Last day of 2026', $desc);
         $this->assertStringNotContainsString('days left', $desc);
     }
 
     public function testEventDescriptionNamesIsoYearWhenItDiffers(): void
     {
-        $desc = doy_event_description(1, 365, 0, 364, 53, 2026, 2027);
+        $desc = doy_event_description(self::statsFor('2027-01-01'));
         $this->assertStringContainsString('Week 53 of 2026', $desc);
     }
 }

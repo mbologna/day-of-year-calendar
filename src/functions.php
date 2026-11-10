@@ -90,7 +90,7 @@ function doy_year_percent(int $dayOfYear, int $totalDays): int
  * Everything the event strings need to know about the day at $timestamp,
  * in the current default timezone.
  *
- * @return array{day: int, total: int, percent: int, left: int, week: int, weekYear: int, year: int}
+ * @return array{day: int, total: int, percent: int, left: int, week: int, weekYear: int, year: int, quarter: int, quarterDay: int, quarterTotal: int}
  */
 function doy_day_stats(int $timestamp): array
 {
@@ -98,14 +98,25 @@ function doy_day_stats(int $timestamp): array
     $day   = (int) date('z', $timestamp) + 1; // date('z') is 0-indexed
     $total = doy_is_leap_year($year) ? 366 : 365;
 
+    $quarter      = intdiv((int) date('n', $timestamp) - 1, 3) + 1;
+    $firstMonth   = ($quarter - 1) * 3 + 1;
+    $quarterStart = (int) date('z', mktime(0, 0, 0, $firstMonth, 1, $year)) + 1;
+    $quarterTotal = 0;
+    for ($month = $firstMonth; $month < $firstMonth + 3; $month++) {
+        $quarterTotal += (int) date('t', mktime(0, 0, 0, $month, 1, $year));
+    }
+
     return [
-        'day'      => $day,
-        'total'    => $total,
-        'percent'  => doy_year_percent($day, $total),
-        'left'     => $total - $day,
-        'week'     => (int) date('W', $timestamp),
-        'weekYear' => (int) date('o', $timestamp), // ISO week-numbering year
-        'year'     => $year,
+        'day'          => $day,
+        'total'        => $total,
+        'percent'      => doy_year_percent($day, $total),
+        'left'         => $total - $day,
+        'week'         => (int) date('W', $timestamp),
+        'weekYear'     => (int) date('o', $timestamp), // ISO week-numbering year
+        'year'         => $year,
+        'quarter'      => $quarter,
+        'quarterDay'   => $day - $quarterStart + 1,
+        'quarterTotal' => $quarterTotal,
     ];
 }
 
@@ -128,29 +139,55 @@ function doy_progress_bar(int $percent, int $width = 20): string
 }
 
 /**
- * Build the DESCRIPTION shown in event detail views, one fact per line.
- * Example:
- *   Day 124 of 365
- *   ▓▓▓▓▓▓░░░░░░░░░░░░░░ 33%
- *   241 days left in 2026
- *   Week 19
+ * Name the notable day $dayOfYear is, or return null on an ordinary day.
+ * Halfway is day 183 in both year lengths: the first day whose rounded-down
+ * percentage reaches 50%. The last day needs no milestone, since its
+ * days-left line already reads "Last day of <year>".
+ */
+function doy_milestone(int $dayOfYear, int $totalDays, int $year): ?string
+{
+    return match (true) {
+        $dayOfYear === 1                         => "First day of {$year}",
+        $totalDays === 366 && $dayOfYear === 60  => 'Leap day',
+        $dayOfYear === intdiv($totalDays + 1, 2) => "Halfway through {$year}",
+        default                                  => null,
+    };
+}
+
+/**
+ * Build the DESCRIPTION shown in event detail views, one fact per line,
+ * from a doy_day_stats() array.
+ * Example (2 July 2026):
+ *   Halfway through 2026
+ *   Day 183 of 365
+ *   ▓▓▓▓▓▓▓▓▓▓░░░░░░░░░░ 50%
+ *   182 days left in 2026
+ *   Q3 · day 2 of 92
+ *   Week 27
  *
+ * The milestone line only appears on notable days (see doy_milestone()).
  * The week line names its ISO year only when it differs from the calendar
  * year, e.g. "Week 53 of 2026" on 1 January 2027.
+ *
+ * @param array{day: int, total: int, percent: int, left: int, week: int, weekYear: int, year: int, quarter: int, quarterDay: int, quarterTotal: int} $d
  */
-function doy_event_description(int $dayOfYear, int $totalDays, int $percent, int $daysLeft, int $isoWeek, int $isoYear, int $year): string
+function doy_event_description(array $d): string
 {
-    $left = match ($daysLeft) {
-        0       => "Last day of {$year}",
-        1       => "1 day left in {$year}",
-        default => "{$daysLeft} days left in {$year}",
+    $left = match ($d['left']) {
+        0       => "Last day of {$d['year']}",
+        1       => "1 day left in {$d['year']}",
+        default => "{$d['left']} days left in {$d['year']}",
     };
-    $week = $isoYear === $year ? "Week {$isoWeek}" : "Week {$isoWeek} of {$isoYear}";
+    $week = $d['weekYear'] === $d['year']
+        ? "Week {$d['week']}"
+        : "Week {$d['week']} of {$d['weekYear']}";
 
-    return implode("\n", [
-        "Day {$dayOfYear} of {$totalDays}",
-        doy_progress_bar($percent) . " {$percent}%",
+    return implode("\n", array_filter([
+        doy_milestone($d['day'], $d['total'], $d['year']),
+        "Day {$d['day']} of {$d['total']}",
+        doy_progress_bar($d['percent']) . " {$d['percent']}%",
         $left,
+        "Q{$d['quarter']} · day {$d['quarterDay']} of {$d['quarterTotal']}",
         $week,
-    ]);
+    ]));
 }
