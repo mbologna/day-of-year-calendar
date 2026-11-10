@@ -113,6 +113,15 @@ class CalendarFeedTest extends TestCase
         $this->assertStringContainsString('200', $headers[0]);
         $decoded = json_decode($body, true);
         $this->assertSame('ok', $decoded['status'] ?? null);
+        $this->assertArrayNotHasKey('version', $decoded);
+    }
+
+    public function testLegacyZoneParameterStillServesFeed(): void
+    {
+        [$body, $headers] = self::fetch('?token=' . self::TOKEN . '&zone=America%2FNew_York');
+
+        $this->assertStringContainsString('200', $headers[0]);
+        $this->assertStringContainsString('X-WR-TIMEZONE:America/New_York', $body);
     }
 
     public function testLegacyZoneParameterStillServesFeed(): void
