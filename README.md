@@ -5,9 +5,19 @@
 
 A self-contained PHP script that generates an iCalendar (`.ics`) feed where each day shows its position in the year as an all-day event.
 
-**Event format:**
-- Calendar grid: `124/365 · 34%`
-- Event detail: `Day 124 of 365 · 34% complete, 241 days remaining · Week 20 · 2026`
+**Event format** (4 May 2026):
+
+- Calendar grid: `124/365 · 33%`
+- Event detail:
+
+  ```
+  Day 124 of 365
+  ▓▓▓▓▓▓░░░░░░░░░░░░░░ 33%
+  241 days left in 2026
+  Week 19
+  ```
+
+The percentage is rounded down, so 100% only appears on the last day of the year, which reads `Last day of 2026` instead of a day count. The week is the ISO week; when its year differs from the calendar year, the line says so, e.g. `Week 53 of 2026` on 1 January 2027.
 
 Subscribe from any calendar app (Google Calendar, Apple Calendar, Outlook, etc.) using a URL.
 
@@ -98,7 +108,7 @@ composer install
 vendor/bin/phpunit
 ```
 
-Tests cover all pure helper functions in `src/functions.php`: leap year detection, token verification, timezone/text sanitisation, RFC 5545 line folding, and event string formatting. `tests/CalendarFeedTest.php` additionally exercises `day-of-year-calendar.php` end to end over HTTP (token rejection, feed output, health check).
+Tests cover all pure helper functions in `src/functions.php`: leap year detection, token verification, timezone/text sanitisation, RFC 5545 escaping and line folding, and event string formatting (percent rounding, singular/last-day wording, ISO week-year). `tests/CalendarFeedTest.php` additionally exercises `day-of-year-calendar.php` end to end over HTTP (token rejection, feed output, calendar name escaping, health check).
 
 ## License
 

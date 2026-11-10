@@ -138,7 +138,7 @@ class FunctionsTest extends TestCase
     {
         return [
             'day 1 of 365'   => [1,   365, 0,  '1/365 · 0%'],
-            'day 124 of 365' => [124, 365, 34, '124/365 · 34%'],
+            'day 124 of 365' => [124, 365, 33, '124/365 · 33%'],
             'day 365 of 365' => [365, 365, 100, '365/365 · 100%'],
             'leap year'      => [200, 366, 55, '200/366 · 55%'],
         ];
@@ -150,22 +150,88 @@ class FunctionsTest extends TestCase
         $this->assertSame($expected, doy_event_summary($day, $total, $pct));
     }
 
+    // ── doy_escape_text / doy_fold_line ──────────────────────────────────────
+
+    public function testEscapeTextEscapesCommaAndSemicolon(): void
+    {
+        $this->assertSame('Milan\\, Italy\\; HQ', doy_escape_text('Milan, Italy; HQ'));
+    }
+
+    public function testFoldLineDoesNotSplitMultibyteCharacters(): void
+    {
+        $output = doy_fold_line('X:' . str_repeat('▓', 40));
+        foreach (explode("\r\n", rtrim($output, "\r\n")) as $line) {
+            $this->assertLessThanOrEqual(75, strlen($line));
+            $this->assertTrue(mb_check_encoding($line, 'UTF-8'));
+        }
+    }
+
+    // ── doy_year_percent ─────────────────────────────────────────────────────
+
+    public static function percentProvider(): array
+    {
+        return [
+            'first day'           => [1,   365, 0],
+            'day 124'             => [124, 365, 33],
+            'second to last day'  => [364, 365, 99],
+            'last day'            => [365, 365, 100],
+            'leap year last day'  => [366, 366, 100],
+        ];
+    }
+
+    #[DataProvider('percentProvider')]
+    public function testYearPercent(int $day, int $total, int $expected): void
+    {
+        $this->assertSame($expected, doy_year_percent($day, $total));
+    }
+
+    // ── doy_day_stats ────────────────────────────────────────────────────────
+
+    public function testDayStatsUsesIsoWeekYear(): void
+    {
+        date_default_timezone_set('UTC');
+        $stats = doy_day_stats(strtotime('2027-01-01'));
+        $this->assertSame(1, $stats['day']);
+        $this->assertSame(53, $stats['week']);
+        $this->assertSame(2026, $stats['weekYear']);
+        $this->assertSame(2027, $stats['year']);
+    }
+
+    // ── doy_progress_bar ─────────────────────────────────────────────────────
+
+    public function testProgressBar(): void
+    {
+        $this->assertSame(str_repeat('░', 20), doy_progress_bar(0));
+        $this->assertSame(str_repeat('▓', 6) . str_repeat('░', 14), doy_progress_bar(33));
+        $this->assertSame(str_repeat('▓', 20), doy_progress_bar(100));
+    }
+
     // ── doy_event_description ────────────────────────────────────────────────
 
-    public function testEventDescriptionContainsAllParts(): void
+    public function testEventDescriptionFormat(): void
     {
-        $desc = doy_event_description(124, 365, 34, 241, 20, 2026);
-        $this->assertStringContainsString('Day 124 of 365', $desc);
-        $this->assertStringContainsString('34% complete', $desc);
-        $this->assertStringContainsString('241 days remaining', $desc);
-        $this->assertStringContainsString('Week 20', $desc);
-        $this->assertStringContainsString('2026', $desc);
+        $this->assertSame(
+            "Day 124 of 365\n" . doy_progress_bar(33) . " 33%\n241 days left in 2026\nWeek 20",
+            doy_event_description(124, 365, 33, 241, 20, 2026, 2026)
+        );
+    }
+
+    public function testEventDescriptionSingularDayLeft(): void
+    {
+        $desc = doy_event_description(364, 365, 99, 1, 53, 2026, 2026);
+        $this->assertStringContainsString('1 day left in 2026', $desc);
     }
 
     public function testEventDescriptionLastDayOfYear(): void
     {
-        $desc = doy_event_description(365, 365, 100, 0, 53, 2026);
-        $this->assertStringContainsString('0 days remaining', $desc);
-        $this->assertStringContainsString('100% complete', $desc);
+        $desc = doy_event_description(365, 365, 100, 0, 53, 2026, 2026);
+        $this->assertStringContainsString('Last day of 2026', $desc);
+        $this->assertStringNotContainsString('days left', $desc);
+    }
+
+    public function testEventDescriptionNamesIsoYearWhenItDiffers(): void
+    {
+        $desc = doy_event_description(1, 365, 0, 364, 53, 2026, 2027);
+        $this->assertStringContainsString('Week 53 of 2026', $desc);
     }
 }
