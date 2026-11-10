@@ -22,8 +22,10 @@ if (!defined('DOY_WINDOW_DAYS')) {
     define('DOY_WINDOW_DAYS', 400);
 }
 
-// OPTIONAL: Number of past days to include in calendar feed
-// Default: 30 (one month of history)
+// OPTIONAL: Minimum number of past days to include in calendar feed.
+// The feed always starts on 1 January of the current year; this only reaches
+// further back when it is earlier, e.g. into December in early January.
+// Default: 30
 if (!defined('DOY_PAST_DAYS')) {
     define('DOY_PAST_DAYS', 30);
 }

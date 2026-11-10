@@ -22,6 +22,8 @@ The percentage is rounded down, so 100% only appears on the last day of the year
 
 Notable days get an extra first line: `First day of 2026`, `Leap day` on 29 February, and `Halfway through 2026` on day 183 (2 July, or 1 July in a leap year), the first day the percentage reaches 50%.
 
+The feed starts on 1 January of the current year (or 30 days back, if that is earlier) and runs 400 days ahead, so the whole year is always filled.
+
 Subscribe from any calendar app (Google Calendar, Apple Calendar, Outlook, etc.) using a URL.
 
 ## Requirements
