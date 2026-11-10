@@ -142,7 +142,6 @@ $today = doy_day_stats(time());
 
         .help-text { font-size: .8rem; color: #666; margin-top: 4px; }
 
-        .optional { color: #888; font-weight: 400; }
     </style>
 </head>
 <body>
@@ -184,15 +183,6 @@ $today = doy_day_stats(time());
             <label for="password">Access token</label>
             <input type="password" name="password" id="password" autocomplete="current-password" required>
             <div class="help-text">The <code>AUTH_TOKEN</code> set on this server.</div>
-        </div>
-
-        <div class="form-group">
-            <label for="location">Calendar label <span class="optional">(optional)</span></label>
-            <input type="text" name="location" id="location"
-                   value="<?= htmlspecialchars($_POST['location'] ?? '') ?>"
-                   maxlength="200" placeholder="e.g. Milan">
-            <div class="help-text">Added to the calendar name, e.g. &ldquo;📅 Day of Year – Milan&rdquo;.
-            Useful to tell several subscriptions apart.</div>
         </div>
 
         <input type="submit" name="generate_url" value="Get subscription link">
