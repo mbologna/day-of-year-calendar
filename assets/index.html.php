@@ -1,5 +1,8 @@
 <?php
 // Included by day-of-year-calendar.php — displays the URL builder web interface.
+
+date_default_timezone_set('Europe/Rome');
+$today = doy_day_stats(time());
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -68,6 +71,30 @@
             margin: 8px 0;
         }
 
+        .preview {
+            background: #fff;
+            border: 1px solid #d6defc;
+            border-radius: 4px;
+            padding: 10px 12px;
+            margin-top: 10px;
+        }
+        .preview-summary { font-weight: 600; margin-bottom: 4px; }
+        .preview-description { white-space: pre-line; color: #555; font-size: .85rem; }
+
+        .subscribe-button {
+            display: inline-block;
+            background: #38a169;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 4px;
+            padding: 8px 18px;
+            font-weight: 600;
+        }
+        .subscribe-button:hover { background: #2f855a; }
+
+        .success-box p { margin: 0 0 6px; font-size: .9rem; }
+        .success-box .warning { margin: 0; font-size: .85rem; color: #555; }
+
         .copy-button {
             background: #4a6cf7;
             color: #fff;
@@ -92,8 +119,7 @@
         }
 
         input[type="password"],
-        input[type="text"],
-        select {
+        input[type="text"] {
             width: 100%;
             padding: 8px 12px;
             border: 1px solid #ccc;
@@ -115,7 +141,7 @@
 
         .help-text { font-size: .8rem; color: #666; margin-top: 4px; }
 
-        .footer { margin-top: 24px; font-size: .8rem; color: #888; border-top: 1px solid #eee; padding-top: 16px; }
+        .optional { color: #888; font-weight: 400; }
     </style>
 </head>
 <body>
@@ -123,66 +149,52 @@
     <h1>📅 Day of Year Calendar</h1>
 
     <div class="info-box">
-        Generates an all-day calendar event for each day showing its position in the year
-        (e.g. <strong>124/365 · 34%</strong>). Enter your password to build a subscription URL.
+        Adds an all-day event to every day showing how far through the year it is.
+        Today&rsquo;s event reads:
+        <div class="preview">
+            <div class="preview-summary"><?= htmlspecialchars(doy_event_summary($today['day'], $today['total'], $today['percent'])) ?></div>
+            <div class="preview-description"><?= htmlspecialchars(doy_event_description($today['day'], $today['total'], $today['percent'], $today['left'], $today['week'], $today['weekYear'], $today['year'])) ?></div>
+        </div>
     </div>
 
     <?php if (isset($error)): ?>
-    <div class="error-box"><strong>Error:</strong> <?= htmlspecialchars($error) ?></div>
+    <div class="error-box"><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
 
     <?php if (isset($subscription_url)): ?>
     <div class="success-box">
-        <h3>✅ Subscription URL Generated</h3>
+        <h3>✅ Your subscription link is ready</h3>
 
-        <p style="margin:0 0 6px;font-weight:600;font-size:.9rem;">HTTPS URL:</p>
+        <p>Apple Calendar, Outlook and most desktop apps:</p>
+        <p><a class="subscribe-button" href="<?= htmlspecialchars($webcal_url) ?>">Subscribe</a></p>
+
+        <p style="margin-top:16px">Google Calendar and other apps: copy this link, then use
+        <em>Add calendar → From URL</em>.</p>
         <div class="url-display" id="sub-url"><?= htmlspecialchars($subscription_url) ?></div>
-        <button class="copy-button" onclick="navigator.clipboard.writeText(document.getElementById('sub-url').textContent)">Copy</button>
+        <button class="copy-button" onclick="navigator.clipboard.writeText(document.getElementById('sub-url').textContent).then(() => { this.textContent = 'Copied'; setTimeout(() => this.textContent = 'Copy link', 2000); })">Copy link</button>
 
-        <p style="margin:0 0 6px;font-weight:600;font-size:.9rem;">Webcal URL (recommended):</p>
-        <div class="url-display" id="webcal-url"><?= htmlspecialchars($webcal_url) ?></div>
-        <button class="copy-button" onclick="navigator.clipboard.writeText(document.getElementById('webcal-url').textContent)">Copy</button>
-
-        <hr style="border:none;border-top:1px solid #c6f6d5;margin:16px 0">
-        <p style="margin:0;font-size:.85rem;"><strong>To subscribe in most calendar apps:</strong> copy the Webcal URL,
-        then use <em>Add calendar → From URL</em>.</p>
+        <p class="warning">Keep this link private: it contains your access token.</p>
     </div>
     <?php endif; ?>
 
     <form method="post">
         <div class="form-group">
-            <label for="password">Password <span style="color:#e53e3e">*</span></label>
-            <input type="password" name="password" id="password" required>
+            <label for="password">Access token</label>
+            <input type="password" name="password" id="password" autocomplete="current-password" required>
+            <div class="help-text">The <code>AUTH_TOKEN</code> set on this server.</div>
         </div>
 
         <div class="form-group">
-            <label for="zone">Timezone</label>
-            <select name="zone" id="zone">
-                <?php
-                $current_zone = $_POST['zone'] ?? 'Europe/Rome';
-                foreach (timezone_identifiers_list() as $tz):
-                    $selected = $tz === $current_zone ? ' selected' : '';
-                    echo '<option value="' . htmlspecialchars($tz) . '"' . $selected . '>'
-                        . htmlspecialchars($tz) . "</option>\n";
-                endforeach;
-                ?>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="location">Location Name <span style="color:#888;font-weight:400">(optional)</span></label>
+            <label for="location">Calendar label <span class="optional">(optional)</span></label>
             <input type="text" name="location" id="location"
                    value="<?= htmlspecialchars($_POST['location'] ?? '') ?>"
-                   placeholder="e.g., Milan">
-            <div class="help-text">Shown in the calendar title: "📅 Day of Year – Milan"</div>
+                   placeholder="e.g. Milan">
+            <div class="help-text">Added to the calendar name, e.g. &ldquo;📅 Day of Year – Milan&rdquo;.
+            Useful to tell several subscriptions apart.</div>
         </div>
 
-        <input type="submit" name="generate_url" value="Generate Subscription URL">
+        <input type="submit" name="generate_url" value="Get subscription link">
     </form>
-
-    <div class="footer">
-        Events show day number, percentage complete, days remaining, and ISO week number.
-    </div>
 </div>
 </body>
 </html>
