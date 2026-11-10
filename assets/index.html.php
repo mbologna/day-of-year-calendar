@@ -153,7 +153,7 @@ $today = doy_day_stats(time());
         Today&rsquo;s event reads:
         <div class="preview">
             <div class="preview-summary"><?= htmlspecialchars(doy_event_summary($today['day'], $today['total'], $today['percent'])) ?></div>
-            <div class="preview-description"><?= htmlspecialchars(doy_event_description($today['day'], $today['total'], $today['percent'], $today['left'], $today['week'], $today['weekYear'], $today['year'])) ?></div>
+            <div class="preview-description"><?= htmlspecialchars(doy_event_description($today)) ?></div>
         </div>
     </div>
 

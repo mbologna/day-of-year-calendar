@@ -147,7 +147,7 @@ $calendar_title = $location_name
     ? "📅 Day of Year – {$location_name}"
     : '📅 Day of Year';
 $calendar_desc = 'Where each day falls in the year: day number, '
-    . 'percentage of the year done, days left and ISO week.';
+    . 'percentage of the year done, days left, quarter and ISO week.';
 
 // ============================================================================
 // OUTPUT
@@ -177,7 +177,7 @@ while ($current <= $end) {
     $d = doy_day_stats($current);
 
     $summary     = doy_event_summary($d['day'], $d['total'], $d['percent']);
-    $description = doy_event_description($d['day'], $d['total'], $d['percent'], $d['left'], $d['week'], $d['weekYear'], $d['year']);
+    $description = doy_event_description($d);
 
     $dateStr  = date('Ymd', $current);
     $nextDateStr = date('Ymd', strtotime('+1 day', $current));
