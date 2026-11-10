@@ -7,6 +7,8 @@ declare(strict_types=1);
  * No side-effects, no I/O — safe to require in tests.
  */
 
+const DOY_DEFAULT_TIMEZONE = 'Europe/Rome';
+
 function doy_verify_token(string $provided): bool
 {
     return hash_equals(AUTH_TOKEN, $provided);
@@ -14,7 +16,7 @@ function doy_verify_token(string $provided): bool
 
 function doy_sanitize_timezone(string $value): string
 {
-    return in_array($value, timezone_identifiers_list(), true) ? $value : 'Europe/Rome';
+    return in_array($value, timezone_identifiers_list(), true) ? $value : DOY_DEFAULT_TIMEZONE;
 }
 
 function doy_sanitize_text(string $value, int $maxLength = 200): string

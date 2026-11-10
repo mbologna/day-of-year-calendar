@@ -1,7 +1,7 @@
 <?php
 // Included by day-of-year-calendar.php — displays the URL builder web interface.
 
-date_default_timezone_set('Europe/Rome');
+date_default_timezone_set(DOY_DEFAULT_TIMEZONE);
 $today = doy_day_stats(time());
 ?>
 <!DOCTYPE html>
@@ -93,6 +93,7 @@ $today = doy_day_stats(time());
         .subscribe-button:hover { background: #2f855a; }
 
         .success-box p { margin: 0 0 6px; font-size: .9rem; }
+        .success-box .next-step { margin-top: 16px; }
         .success-box .warning { margin: 0; font-size: .85rem; color: #555; }
 
         .copy-button {
@@ -168,10 +169,11 @@ $today = doy_day_stats(time());
         <p>Apple Calendar, Outlook and most desktop apps:</p>
         <p><a class="subscribe-button" href="<?= htmlspecialchars($webcal_url) ?>">Subscribe</a></p>
 
-        <p style="margin-top:16px">Google Calendar and other apps: copy this link, then use
-        <em>Add calendar → From URL</em>.</p>
+        <p class="next-step">Google Calendar and other apps: copy this link, then use
+        <em>Add calendar → From URL</em>. For Google Calendar, do this on a computer:
+        the mobile app can&rsquo;t add calendars by URL.</p>
         <div class="url-display" id="sub-url"><?= htmlspecialchars($subscription_url) ?></div>
-        <button class="copy-button" onclick="navigator.clipboard.writeText(document.getElementById('sub-url').textContent).then(() => { this.textContent = 'Copied'; setTimeout(() => this.textContent = 'Copy link', 2000); })">Copy link</button>
+        <button class="copy-button" onclick="copyLink(this)">Copy link</button>
 
         <p class="warning">Keep this link private: it contains your access token.</p>
     </div>
@@ -188,7 +190,7 @@ $today = doy_day_stats(time());
             <label for="location">Calendar label <span class="optional">(optional)</span></label>
             <input type="text" name="location" id="location"
                    value="<?= htmlspecialchars($_POST['location'] ?? '') ?>"
-                   placeholder="e.g. Milan">
+                   maxlength="200" placeholder="e.g. Milan">
             <div class="help-text">Added to the calendar name, e.g. &ldquo;📅 Day of Year – Milan&rdquo;.
             Useful to tell several subscriptions apart.</div>
         </div>
@@ -196,5 +198,29 @@ $today = doy_day_stats(time());
         <input type="submit" name="generate_url" value="Get subscription link">
     </form>
 </div>
+<script>
+// Copy the subscription link. Where the Clipboard API is missing or refused
+// (plain http, older browsers), select the link so it can be copied by hand.
+function copyLink(button) {
+    const url = document.getElementById('sub-url');
+    const show = (label) => {
+        button.textContent = label;
+        setTimeout(() => { button.textContent = 'Copy link'; }, 3000);
+    };
+    const selectForManualCopy = () => {
+        const range = document.createRange();
+        range.selectNodeContents(url);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        show('Press Ctrl+C / ⌘C');
+    };
+    if (!navigator.clipboard) {
+        selectForManualCopy();
+        return;
+    }
+    navigator.clipboard.writeText(url.textContent).then(() => show('Copied'), selectForManualCopy);
+}
+</script>
 </body>
 </html>
