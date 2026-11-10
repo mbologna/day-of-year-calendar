@@ -14,8 +14,11 @@ declare(strict_types=1);
  *
  * URL parameters:
  *   token    – authentication token (required)
- *   zone     – timezone identifier (default: Europe/Rome)
- *   location – optional display name shown in the calendar title
+ *   zone     – timezone identifier (default: Europe/Rome). Only decides which
+ *              day counts as "today" for the feed's date range: events are
+ *              all-day, so they fall on the same date everywhere. The form no
+ *              longer offers it; older links that carry it keep working.
+ *   location – optional label appended to the calendar name
  */
 
 // ============================================================================
@@ -94,14 +97,10 @@ if (isset($_GET['health'])) {
 if (isset($_POST['generate_url']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
     if (!doy_verify_token($password)) {
-        $error = 'Invalid password';
+        $error = 'That access token is not valid. Check the AUTH_TOKEN set on this server.';
     } else {
-        $zone     = doy_sanitize_timezone($_POST['zone'] ?? 'Europe/Rome');
         $location = doy_sanitize_text($_POST['location'] ?? '');
         $params   = ['token' => AUTH_TOKEN];
-        if ($zone !== 'Europe/Rome') {
-            $params['zone'] = $zone;
-        }
         if ($location !== '') {
             $params['location'] = $location;
         }

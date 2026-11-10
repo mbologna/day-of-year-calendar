@@ -75,7 +75,7 @@ class CalendarFeedTest extends TestCase
     {
         [$body, $headers] = self::fetch('');
         $this->assertStringContainsString('200', $headers[0]);
-        $this->assertStringContainsString('Generate Subscription URL', $body);
+        $this->assertStringContainsString('Get subscription link', $body);
     }
 
     public function testInvalidTokenReturns403(): void
@@ -113,5 +113,13 @@ class CalendarFeedTest extends TestCase
         $this->assertStringContainsString('200', $headers[0]);
         $decoded = json_decode($body, true);
         $this->assertSame('ok', $decoded['status'] ?? null);
+    }
+
+    public function testLegacyZoneParameterStillServesFeed(): void
+    {
+        [$body, $headers] = self::fetch('?token=' . self::TOKEN . '&zone=America%2FNew_York');
+
+        $this->assertStringContainsString('200', $headers[0]);
+        $this->assertStringContainsString('X-WR-TIMEZONE:America/New_York', $body);
     }
 }
