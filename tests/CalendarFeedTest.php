@@ -97,6 +97,13 @@ class CalendarFeedTest extends TestCase
 
         $today = date('Ymd');
         $this->assertStringContainsString("DTSTART;VALUE=DATE:{$today}", $body);
+        $this->assertStringContainsString('X-WR-CALDESC:', $body);
+    }
+
+    public function testCalendarLabelIsEscapedInName(): void
+    {
+        [$body] = self::fetch('?token=' . self::TOKEN . '&location=' . rawurlencode('Milan, Italy'));
+        $this->assertStringContainsString('X-WR-CALNAME:📅 Day of Year – Milan\\, Italy', $body);
     }
 
     public function testHealthCheckReturnsOkWithoutToken(): void
