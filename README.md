@@ -20,7 +20,14 @@ A self-contained PHP script that generates an iCalendar (`.ics`) feed where each
 
 The percentage is rounded down, so 100% only appears on the last day of the year, which reads `Last day of 2026` instead of a day count. The week is the ISO week; when its year differs from the calendar year, the line says so, e.g. `Week 53 of 2026` on 1 January 2027.
 
-Notable days get an extra first line: `First day of 2026`, `Leap day` on 29 February, and `Halfway through 2026` on day 183 (2 July, or 1 July in a leap year), the first day the percentage reaches 50%.
+Notable days get an extra first line:
+
+- `First day of 2026`
+- `Leap day` on 29 February
+- `Halfway through 2026` on day 183 (2 July, or 1 July in a leap year), the first day the percentage reaches 50%
+- `100th day of 2026`, and likewise the 200th and 300th
+- `Final 100 days of 2026` on 23 September, the day with 99 days left after it
+- `Last day of Q1`, Q2 and Q3 (the last day of Q4 is already `Last day of 2026`)
 
 Subscribe from any calendar app (Google Calendar, Apple Calendar, Outlook, etc.) using a URL.
 
