@@ -142,17 +142,30 @@ function doy_progress_bar(int $percent, int $width = 20): string
 
 /**
  * Name the notable day $dayOfYear is, or return null on an ordinary day.
- * Halfway is day 183 in both year lengths: the first day whose rounded-down
- * percentage reaches 50%. The last day needs no milestone, since its
- * days-left line already reads "Last day of <year>".
+ * No two milestones share a day.
+ *
+ * - Halfway is day 183 in both year lengths: the first day whose
+ *   rounded-down percentage reaches 50%.
+ * - "Final 100 days" falls on the day with 99 days left, since the
+ *   days-left line counts the days after today; on the day before, that
+ *   line already reads "100 days left".
+ * - The last day of the year needs no milestone, nor does the last day of
+ *   Q4: the days-left line already reads "Last day of <year>".
  */
 function doy_milestone(int $dayOfYear, int $totalDays, int $year): ?string
 {
+    $leap = $totalDays - 365; // 1 in a leap year, else 0
+
     return match (true) {
-        $dayOfYear === 1                         => "First day of {$year}",
-        $totalDays === 366 && $dayOfYear === 60  => 'Leap day',
-        $dayOfYear === intdiv($totalDays + 1, 2) => "Halfway through {$year}",
-        default                                  => null,
+        $dayOfYear === 1                            => "First day of {$year}",
+        $leap === 1 && $dayOfYear === 60            => 'Leap day',
+        $dayOfYear === intdiv($totalDays + 1, 2)    => "Halfway through {$year}",
+        in_array($dayOfYear, [100, 200, 300], true) => "{$dayOfYear}th day of {$year}",
+        $dayOfYear === $totalDays - 99              => "Final 100 days of {$year}",
+        $dayOfYear === 90 + $leap                   => 'Last day of Q1',
+        $dayOfYear === 181 + $leap                  => 'Last day of Q2',
+        $dayOfYear === 273 + $leap                  => 'Last day of Q3',
+        default                                     => null,
     };
 }
 

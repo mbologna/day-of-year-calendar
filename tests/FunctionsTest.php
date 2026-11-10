@@ -235,6 +235,18 @@ class FunctionsTest extends TestCase
             'last day'             => ['2026-12-31', null],
             'ordinary day'         => ['2026-05-04', null],
             '1 March, common year' => ['2026-03-01', null],
+            '100th day'            => ['2026-04-10', '100th day of 2026'],
+            '100th day, leap'      => ['2028-04-09', '100th day of 2028'],
+            '200th day'            => ['2026-07-19', '200th day of 2026'],
+            '300th day'            => ['2026-10-27', '300th day of 2026'],
+            '100 days left'        => ['2026-09-22', null],
+            'final 100 days'       => ['2026-09-23', 'Final 100 days of 2026'],
+            'final 100 days, leap' => ['2028-09-23', 'Final 100 days of 2028'],
+            'end of Q1'            => ['2026-03-31', 'Last day of Q1'],
+            'end of Q1, leap'      => ['2028-03-31', 'Last day of Q1'],
+            'end of Q2'            => ['2026-06-30', 'Last day of Q2'],
+            'end of Q3, leap'      => ['2028-09-30', 'Last day of Q3'],
+            'day after end of Q3'  => ['2026-10-01', null],
         ];
     }
 
@@ -243,6 +255,28 @@ class FunctionsTest extends TestCase
     {
         $stats = self::statsFor($date);
         $this->assertSame($expected, doy_milestone($stats['day'], $stats['total'], $stats['year']));
+    }
+
+    public static function milestoneCountProvider(): array
+    {
+        return [
+            'common year' => [365, 9],
+            'leap year'   => [366, 10],
+        ];
+    }
+
+    /**
+     * Every milestone lands on its own day: a collision would hide one and
+     * lower the count.
+     */
+    #[DataProvider('milestoneCountProvider')]
+    public function testMilestonesFallOnDistinctDays(int $totalDays, int $expected): void
+    {
+        $days = array_filter(
+            range(1, $totalDays),
+            fn(int $day) => doy_milestone($day, $totalDays, 2026) !== null
+        );
+        $this->assertCount($expected, $days);
     }
 
     // ── doy_progress_bar ─────────────────────────────────────────────────────
