@@ -82,7 +82,7 @@ Infrastructure is managed via Terraform in `../infra/terraform/day-of-year-calen
 
 Opening the root URL without a token shows a form that previews today's event and builds the subscription link. Enter the `AUTH_TOKEN` as the access token and click **Get subscription link**. The result offers a **Subscribe** button (a `webcal://` link for Apple Calendar, Outlook and other desktop apps) and the `https://` link to paste into Google Calendar.
 
-Health check (no auth required, returns JSON with `status`, `php` and `timestamp`):
+Health check (no auth required, returns JSON with `status` and `timestamp`):
 
 ```
 https://your-host/?health=1

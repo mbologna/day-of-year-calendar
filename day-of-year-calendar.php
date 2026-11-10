@@ -87,7 +87,6 @@ if (isset($_GET['health'])) {
     header('Content-Type: application/json');
     echo json_encode([
         'status'    => 'ok',
-        'php'       => PHP_VERSION,
         'timestamp' => time(),
     ]);
     exit;
