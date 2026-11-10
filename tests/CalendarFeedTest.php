@@ -113,6 +113,7 @@ class CalendarFeedTest extends TestCase
         $this->assertStringContainsString('200', $headers[0]);
         $decoded = json_decode($body, true);
         $this->assertSame('ok', $decoded['status'] ?? null);
+        $this->assertArrayNotHasKey('version', $decoded);
     }
 
     public function testLegacyZoneParameterStillServesFeed(): void
