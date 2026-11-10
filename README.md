@@ -74,7 +74,7 @@ Infrastructure is managed via Terraform in `../infra/terraform/day-of-year-calen
 
 ### Self-hosted (Apache / nginx)
 
-1. Copy `day-of-year-calendar.php` and `src/` to your document root
+1. Copy `day-of-year-calendar.php`, `src/` and `assets/` to your document root
 2. Create `config/config.php` with `AUTH_TOKEN`
 3. Point your web server at `day-of-year-calendar.php` as the directory index
 
