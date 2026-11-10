@@ -71,11 +71,33 @@ class CalendarFeedTest extends TestCase
         return [$body, $http_response_header ?? []];
     }
 
+    private static function post(array $fields): string
+    {
+        $url = 'http://' . self::HOST . ':' . self::PORT . '/day-of-year-calendar.php';
+        return file_get_contents($url, false, stream_context_create(['http' => [
+            'method'        => 'POST',
+            'header'        => 'Content-Type: application/x-www-form-urlencoded',
+            'content'       => http_build_query($fields),
+            'ignore_errors' => true,
+        ]]));
+    }
+
     public function testMissingTokenShowsUrlBuilderForm(): void
     {
         [$body, $headers] = self::fetch('');
         $this->assertStringContainsString('200', $headers[0]);
         $this->assertStringContainsString('Get subscription link', $body);
+        $this->assertStringNotContainsString('name="location"', $body);
+    }
+
+    public function testGeneratedLinkIgnoresPostedLabel(): void
+    {
+        // A page cached from before the label field was removed may still post it.
+        $body = self::post(['generate_url' => '1', 'password' => self::TOKEN, 'location' => 'Milan']);
+
+        $this->assertStringContainsString('id="sub-url"', $body);
+        $this->assertStringContainsString('?token=' . self::TOKEN . '</div>', $body);
+        $this->assertStringNotContainsString('location=', $body);
     }
 
     public function testInvalidTokenReturns403(): void

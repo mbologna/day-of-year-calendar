@@ -18,7 +18,8 @@ declare(strict_types=1);
  *              day counts as "today" for the feed's date range: events are
  *              all-day, so they fall on the same date everywhere. The form no
  *              longer offers it; older links that carry it keep working.
- *   location – optional label appended to the calendar name
+ *   location – optional label appended to the calendar name. The form no
+ *              longer offers it; older links that carry it keep working.
  */
 
 // ============================================================================
@@ -101,11 +102,7 @@ if (isset($_POST['generate_url']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!doy_verify_token($password)) {
         $error = 'That access token is not valid. Check the AUTH_TOKEN set on this server.';
     } else {
-        $location = doy_sanitize_text($_POST['location'] ?? '');
-        $params   = ['token' => AUTH_TOKEN];
-        if ($location !== '') {
-            $params['location'] = $location;
-        }
+        $params           = ['token' => AUTH_TOKEN];
         $protocol         = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
         $host             = $_SERVER['HTTP_HOST'];
         $script           = $_SERVER['SCRIPT_NAME'];

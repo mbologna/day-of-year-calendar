@@ -71,7 +71,7 @@ Infrastructure is managed via Terraform in `../infra/terraform/day-of-year-calen
 
 ## Web interface & URL builder
 
-Opening the root URL without a token shows a form that previews today's event and builds the subscription link. Enter the `AUTH_TOKEN` as the access token and an optional calendar label, and click **Get subscription link**. The result offers a **Subscribe** button (a `webcal://` link for Apple Calendar, Outlook and other desktop apps) and the `https://` link to paste into Google Calendar.
+Opening the root URL without a token shows a form that previews today's event and builds the subscription link. Enter the `AUTH_TOKEN` as the access token and click **Get subscription link**. The result offers a **Subscribe** button (a `webcal://` link for Apple Calendar, Outlook and other desktop apps) and the `https://` link to paste into Google Calendar.
 
 Health check (no auth required, returns JSON with `status`, `php` and `timestamp`):
 
@@ -92,6 +92,8 @@ https://your-host/day-of-year-calendar.php?token=YOUR_TOKEN
 | `location` | No       | (none)        | Label appended to the calendar name               |
 
 Events are all-day, so they fall on the same calendar date in every timezone: `zone` only decides which day counts as today when the feed picks its date range. The form no longer offers it, and links that already carry it keep working.
+
+`location` is likewise no longer offered by the form, since every subscription shows the same events; rename the calendar in your calendar app instead. Links that carry it keep the label in the calendar name.
 
 ## Local development
 
