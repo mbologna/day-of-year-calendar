@@ -101,6 +101,14 @@ class CalendarFeedTest extends TestCase
         $this->assertStringContainsString('X-WR-CALDESC:', $body);
     }
 
+    public function testFeedStartsOnFirstOfJanuary(): void
+    {
+        [$body] = self::fetch('?token=' . self::TOKEN);
+
+        $janFirst = date('Y') . '0101';
+        $this->assertStringContainsString("DTSTART;VALUE=DATE:{$janFirst}", $body);
+    }
+
     public function testCalendarLabelIsEscapedInName(): void
     {
         [$body] = self::fetch('?token=' . self::TOKEN . '&location=' . rawurlencode('Milan, Italy'));

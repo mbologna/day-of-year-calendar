@@ -171,9 +171,15 @@ echo "X-WR-TIMEZONE:{$timezone}\r\n";
 echo "X-PUBLISHED-TTL:PT{$ttl_hours}H\r\n";
 echo "REFRESH-INTERVAL;VALUE=DURATION:PT{$ttl_hours}H\r\n";
 
-$start = strtotime('-' . DOY_PAST_DAYS . ' days', strtotime('today'));
+// Start on 1 January so the whole current year is filled, or DOY_PAST_DAYS
+// back if that is earlier (early January reaches into last December).
+$today = strtotime('today');
+$start = min(
+    strtotime(date('Y', $today) . '-01-01'),
+    strtotime('-' . DOY_PAST_DAYS . ' days', $today)
+);
 $current = $start;
-$end = strtotime('+' . DOY_WINDOW_DAYS . ' days', strtotime('today'));
+$end = strtotime('+' . DOY_WINDOW_DAYS . ' days', $today);
 
 while ($current <= $end) {
     $d = doy_day_stats($current);
