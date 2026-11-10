@@ -127,7 +127,9 @@ class CalendarFeedTest extends TestCase
     {
         [$body] = self::fetch('?token=' . self::TOKEN);
 
-        $janFirst = date('Y') . '0101';
+        // The feed works out today in its default timezone, not the test's.
+        $year     = (new DateTimeImmutable('now', new DateTimeZone(DOY_DEFAULT_TIMEZONE)))->format('Y');
+        $janFirst = $year . '0101';
         $this->assertStringContainsString("DTSTART;VALUE=DATE:{$janFirst}", $body);
     }
 
