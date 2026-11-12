@@ -2,5 +2,12 @@
 .github
 .claude
 config/
+tests/
 .gitignore
+composer.json
+composer.lock
+vendor/
+phpunit.xml.dist
 README.md
+LICENSE
+renovate.json
