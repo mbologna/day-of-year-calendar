@@ -1,9 +1,16 @@
 name: CI
 
+# Tests on every push and pull request. On main (push, the weekly schedule or
+# a manual run) the tested source then builds the feed and the subscription
+# page and publishes them on GitHub Pages. The weekly run keeps the feed at
+# least 393 days ahead, and fails if the published feed is older than 8 days.
+#
+# GitHub disables a public repo's schedules after 60 days without activity;
+# Renovate's commits keep this one alive.
+
 "on":
   push:
     branches: [main]
-    tags: ["v*.*.*"]
   pull_request:
   workflow_dispatch:
   schedule:
@@ -11,44 +18,78 @@ name: CI
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  # Never cancel a run on the default branch: it may be releasing, and a cut
-  # release leaves a tag without its Release.
+  # Never cancel a run on the default branch: it may be deploying.
   cancel-in-progress: ${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
 
 permissions:
   contents: read
 
 jobs:
-  php:
-    uses: mbologna/.github/.github/workflows/php-ci.yml@8afa698d74ff2cbfdb96ee637825753be6a15aa3 # main
+  python:
+    uses: mbologna/.github/.github/workflows/python-ci.yml@8afa698d74ff2cbfdb96ee637825753be6a15aa3 # main
     with:
-      php_version: "8.5"
-      enable_lint: true
-      lint_tools: ""
-      lint_command: php -l day-of-year-calendar.php
-
-  docker:
-    needs: [php]
-    # contents: the release tag and its Release; actions: dispatch the tag
-    # build (a tag pushed with GITHUB_TOKEN triggers no run); the rest:
-    # push, sign and scan the image, and deploy it.
-    permissions:
-      contents: write
-      packages: write
-      id-token: write
-      attestations: write
-      security-events: write
-      actions: write
-    uses: mbologna/.github/.github/workflows/docker-ci.yml@8afa698d74ff2cbfdb96ee637825753be6a15aa3 # main
-    with:
-      image_name: day-of-year-calendar
-      # push: the Cloud Run deploy runs the sha-* image of each
-      # main build, so main keeps publishing.
-      publish: push
-      # auto-release runs inside docker-ci: Monday's schedule releases with
-      # this strategy, a push to main only a CVE fix.
-      release_strategy: conventional
-      # Points the Cloud Run service at the image of each push or manual run
-      # on main that builds one; a docs- or CI-only push deploys nothing.
-      deploy_type: service
+      python_version: "3.15"
+      enable_codecov: false
     secrets: inherit
+
+  build:
+    name: Build site
+    needs: python
+    if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.13.7"
+          python-version: "3.15"
+
+      # "Today" is the current date in Europe/Rome.
+      - name: Build
+        run: uv run --locked --no-dev day-of-year-calendar build --output-dir public
+
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: public
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-26.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+  freshness:
+    name: Check the published feed
+    needs: deploy
+    # Also runs when an earlier job failed, so a broken build or deploy shows
+    # up as a stale feed too once it has gone on for over a week.
+    if: ${{ !cancelled() && github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.13.7"
+          python-version: "3.15"
+
+      - name: Fail if the published feed is older than 8 days
+        run: uv run --locked --no-dev day-of-year-calendar check --max-age-days 8

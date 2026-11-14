@@ -3,7 +3,12 @@
 [![CI](https://github.com/mbologna/day-of-year-calendar/actions/workflows/ci.yml/badge.svg)](https://github.com/mbologna/day-of-year-calendar/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-A self-contained PHP script that generates an iCalendar (`.ics`) feed where each day shows its position in the year as an all-day event.
+An iCalendar (`.ics`) feed where each day shows its position in the year as an all-day event.
+
+**Subscribe:** <https://mbologna.github.io/day-of-year-calendar/>
+
+- Apple Calendar, Outlook and most desktop apps: `webcal://mbologna.github.io/day-of-year-calendar/day-of-year.ics`
+- Google Calendar: *Add calendar → From URL* with `https://mbologna.github.io/day-of-year-calendar/day-of-year.ics`, on a computer (the mobile app can't add calendars by URL).
 
 **Event format** (4 May 2026):
 
@@ -29,102 +34,40 @@ Notable days get an extra first line:
 - `Final 100 days of 2026` on 23 September, the day with 99 days left after it
 - `Last day of Q1`, Q2 and Q3 (the last day of Q4 is already `Last day of 2026`)
 
-The feed starts on 1 January of the current year (or 30 days back, if that is earlier) and runs 400 days ahead, so the whole year is always filled.
+## How it's published
 
-Subscribe from any calendar app (Google Calendar, Apple Calendar, Outlook, etc.) using a URL.
+The feed is a static file. Each event depends only on its own date, so a file built once a week serves the same events a per-request server would.
 
-## Requirements
+A Python script (standard library only) writes `day-of-year.ics` and `index.html`, the subscription page with a preview of the day's event. The feed starts on 1 January of the current year (or 30 days back, if that is earlier) and runs 400 days ahead. "Today" is the current date in Europe/Rome.
 
-- PHP 8.5+
-- A web server (Apache, nginx, or PHP's built-in server for testing)
+The [CI workflow](.github/workflows/ci.yml) runs the tests, then builds and deploys both files to GitHub Pages:
 
-## Configuration
+- on every push to `main`;
+- every Monday at 06:00 UTC, so the feed always runs at least 393 days ahead;
+- on a manual run.
 
-The `AUTH_TOKEN` can be set two ways, pick one:
+After deploying, the workflow fetches the published feed and fails if its `DTSTAMP` (the build time) is more than 8 days old. GitHub disables a public repo's scheduled workflows after 60 days without activity. Renovate's commits keep this one active. A disabled schedule runs nothing, so nothing fails either: if that ever happens, re-enable the workflow from the Actions tab.
 
-**Environment variable** (Cloud Run, Docker):
-```bash
-export AUTH_TOKEN=$(openssl rand -hex 32)
+The feed tells calendar apps to refresh every 24 hours (`REFRESH-INTERVAL`, `X-PUBLISHED-TTL`).
+
+Version 1 was a PHP app on Cloud Run behind an access token. Version 2 generates the same events: the tests compare its output with the PHP app's, byte for byte except `DTSTAMP`. The token, the `zone` and `location` parameters and the `?health` endpoint are gone.
+
+## Development
+
+```sh
+uv run pytest
+uv run ruff check . && uv run ruff format --check .
+
+# Build into public/, optionally as if today were another date
+uv run day-of-year-calendar build --output-dir public --today 2027-01-01
+
+# Check the published feed's age
+uv run day-of-year-calendar check --max-age-days 8
 ```
 
-**Config file** (self-hosted):
-```
-day-of-year-calendar/
-├── day-of-year-calendar.php
-├── src/
-└── config/
-    └── config.php   ← copy from config.example.php
-```
+`tests/test_golden.py` compares the feed with `tests/fixtures/php-v1.1.0/`, the output of the PHP v1.1.0 app for eight fixed dates (leap day, year ends, the halfway day, the DST change night, and UTC evenings that are already the next day in Rome).
 
-```php
-<?php
-define('AUTH_TOKEN', 'your-secret-token-here');
-```
-
-## Deployment
-
-### Docker / Cloud Run
-
-```bash
-docker build -t day-of-year-calendar .
-docker run -p 8080:8080 -e AUTH_TOKEN=your-token day-of-year-calendar
-```
-
-Infrastructure is managed via Terraform in `../infra/terraform/day-of-year-calendar/`. A push to `main` builds, mirrors to Artifact Registry, and deploys to Cloud Run automatically.
-
-### Self-hosted (Apache / nginx)
-
-1. Copy `day-of-year-calendar.php`, `src/` and `assets/` to your document root
-2. Create `config/config.php` with `AUTH_TOKEN`
-3. Point your web server at `day-of-year-calendar.php` as the directory index
-
-## Web interface & URL builder
-
-Opening the root URL without a token shows a form that previews today's event and builds the subscription link. Enter the `AUTH_TOKEN` as the access token and click **Get subscription link**. The result offers a **Subscribe** button (a `webcal://` link for Apple Calendar, Outlook and other desktop apps) and the `https://` link to paste into Google Calendar.
-
-Health check (no auth required, returns JSON with `status` and `timestamp`):
-
-```
-https://your-host/?health=1
-```
-
-## Subscribing
-
-```
-https://your-host/day-of-year-calendar.php?token=YOUR_TOKEN
-```
-
-| Parameter  | Required | Default       | Description                                       |
-|------------|----------|---------------|---------------------------------------------------|
-| `token`    | Yes      | (none)        | Must match `AUTH_TOKEN`                           |
-| `zone`     | No       | `Europe/Rome` | PHP timezone identifier (e.g. `America/New_York`); see below |
-| `location` | No       | (none)        | Label appended to the calendar name               |
-
-Events are all-day, so they fall on the same calendar date in every timezone: `zone` only decides which day counts as today when the feed picks its date range. The form no longer offers it, and links that already carry it keep working.
-
-`location` is likewise no longer offered by the form, since every subscription shows the same events; rename the calendar in your calendar app instead. Links that carry it keep the label in the calendar name.
-
-## Local development
-
-```bash
-# Start a local server
-AUTH_TOKEN=test php -S localhost:8000
-
-# Health check
-curl "http://localhost:8000/?health=1"
-
-# Fetch the feed
-curl "http://localhost:8000/day-of-year-calendar.php?token=test"
-```
-
-## Testing
-
-```bash
-composer install
-vendor/bin/phpunit
-```
-
-Tests cover all pure helper functions in `src/functions.php`: leap year detection, token verification, timezone/text sanitisation, RFC 5545 escaping and line folding, and event string formatting (percent rounding, singular/last-day wording, ISO week-year, quarters, milestones). `tests/CalendarFeedTest.php` additionally exercises `day-of-year-calendar.php` end to end over HTTP (token rejection, feed output, calendar name escaping, health check).
+Dependencies resolve only to releases at least 7 days old (`exclude-newer` in `pyproject.toml`). The script itself needs none.
 
 ## License
 

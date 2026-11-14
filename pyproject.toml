@@ -1,0 +1,42 @@
+[project]
+name = "day-of-year-calendar"
+version = "2.0.0"
+description = "iCalendar feed with an all-day event per day showing its position in the year"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.scripts]
+day-of-year-calendar = "day_of_year_calendar.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.13,<0.14"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = ["pytest>=9.0.3", "pytest-cov>=7.1.0", "ruff>=0.8.0"]
+
+[tool.uv]
+# Resolve only releases at least 7 days old, so a compromised release has time
+# to be caught and yanked before it gets locked.
+exclude-newer = "7 days"
+required-version = ">=0.12.12"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "C4", "UP"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --strict-markers"
+
+[tool.coverage.run]
+source = ["day_of_year_calendar"]
+
+[tool.coverage.report]
+fail_under = 90
