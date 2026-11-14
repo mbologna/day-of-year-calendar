@@ -1,0 +1,3 @@
+# Golden feeds captured from the PHP v1.1.0 app: CRLF line endings are part of
+# the expected bytes, so git must never convert them.
+tests/fixtures/** -text
