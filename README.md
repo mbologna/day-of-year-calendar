@@ -5,10 +5,10 @@
 
 An iCalendar (`.ics`) feed where each day shows its position in the year as an all-day event.
 
-**Subscribe:** <https://mbologna.github.io/day-of-year-calendar/>
+**Subscribe:** <https://feeds.michelebologna.net/day-of-year-calendar/>
 
-- Apple Calendar, Outlook and most desktop apps: `webcal://mbologna.github.io/day-of-year-calendar/day-of-year.ics`
-- Google Calendar: *Add calendar → From URL* with `https://mbologna.github.io/day-of-year-calendar/day-of-year.ics`, on a computer (the mobile app can't add calendars by URL).
+- Apple Calendar, Outlook and most desktop apps: `webcal://feeds.michelebologna.net/day-of-year-calendar/day-of-year.ics`
+- Google Calendar: *Add calendar → From URL* with `https://feeds.michelebologna.net/day-of-year-calendar/day-of-year.ics`, on a computer (the mobile app can't add calendars by URL).
 
 **Event format** (4 May 2026):
 
@@ -35,6 +35,8 @@ Notable days get an extra first line:
 - `Last day of Q1`, Q2 and Q3 (the last day of Q4 is already `Last day of 2026`)
 
 ## How it's published
+
+The files are published on GitHub Pages and served at `feeds.michelebologna.net`, a proxy in front of every feed I publish, so subscription URLs keep working wherever the files are hosted. The older `mbologna.github.io/day-of-year-calendar/` URLs and every earlier address keep working too.
 
 The feed is a static file. Each event depends only on its own date, so a file built once a week serves the same events a per-request server would.
 

@@ -16,7 +16,7 @@ import pytest
 
 from day_of_year_calendar import cli, render_calendar, today_in
 
-ICS_URL = "https://mbologna.github.io/day-of-year-calendar/day-of-year.ics"
+ICS_URL = "https://feeds.michelebologna.net/day-of-year-calendar/day-of-year.ics"
 
 
 @pytest.fixture
@@ -35,7 +35,7 @@ def test_page_shows_subscription_links_without_a_token_form(site):
     assert "<form" not in page
     assert 'type="password"' not in page
     assert 'name="location"' not in page
-    assert 'href="webcal://mbologna.github.io/day-of-year-calendar/day-of-year.ics"' in page
+    assert 'href="webcal://feeds.michelebologna.net/day-of-year-calendar/day-of-year.ics"' in page
     assert "Add calendar &rarr; From URL" in page
     assert "124/365 · 33%" in page  # today's event, as the preview
 
