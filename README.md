@@ -54,6 +54,31 @@ The feed tells calendar apps to refresh every 24 hours (`REFRESH-INTERVAL`, `X-P
 
 Version 1 was a PHP app on Cloud Run behind an access token. Version 2 generates the same events: the tests compare its output with the PHP app's, byte for byte except `DTSTAMP`. The token, the `zone` and `location` parameters and the `?health` endpoint are gone.
 
+## Run it yourself
+
+The script needs Python 3.12 or later, no other packages and no network access. [uv](https://docs.astral.sh/uv/) runs it straight from this repository:
+
+```sh
+uvx --from git+https://github.com/mbologna/day-of-year-calendar \
+  day-of-year-calendar build --output-dir public --page-url https://calendar.example.com/
+```
+
+From a clone, `uv run day-of-year-calendar build --output-dir public --page-url https://calendar.example.com/` does the same. The `build` options:
+
+- `--output-dir`: where to write `day-of-year.ics` and `index.html` (default `public`);
+- `--page-url`: the URL the folder is served from. The subscription page builds its feed links from it, and the default is this site's address;
+- `--timezone`: the timezone that decides which day is "today" (default `Europe/Rome`; an unknown name falls back to it);
+- `--today YYYY-MM-DD`: build as if today were that date.
+
+Serve the folder with any static web server, such as nginx, Caddy or `python3 -m http.server`. Each build runs 400 days ahead of its own date, so rebuild at least once a week, as the published site does, to keep the feed at least 393 days ahead:
+
+```cron
+# Every Monday at 06:00
+0 6 * * 1  uvx --from git+https://github.com/mbologna/day-of-year-calendar day-of-year-calendar build --output-dir /var/www/day-of-year --page-url https://calendar.example.com/
+```
+
+Give cron the full path to `uvx` if its `PATH` does not include it. `day-of-year-calendar check https://calendar.example.com/day-of-year.ics --max-age-days 8` exits with status 1 when the feed at that URL was built more than 8 days ago.
+
 ## Development
 
 ```sh
