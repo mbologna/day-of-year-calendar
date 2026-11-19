@@ -4,6 +4,7 @@ name: CI
 # a manual run) the tested source then builds the feed and the subscription
 # page and publishes them on GitHub Pages. The weekly run keeps the feed at
 # least 393 days ahead, and fails if the published feed is older than 8 days.
+# It also cuts the weekly release (auto-release).
 #
 # GitHub disables a public repo's schedules after 60 days without activity;
 # Renovate's commits keep this one alive.
@@ -30,6 +31,19 @@ jobs:
     with:
       python_version: "3.15"
       enable_codecov: false
+    secrets: inherit
+
+  # Monday's run tags the next version and publishes a GitHub Release with
+  # the changes as its notes; nothing builds on tags, Pages deploys from main.
+  auto-release:
+    needs: [python]
+    # contents: push the tag and create the Release.
+    permissions:
+      contents: write
+    uses: mbologna/.github/.github/workflows/auto-release.yml@423fe81596d69d9cd74191195ee6d3af7f9bf360 # main
+    with:
+      strategy: conventional
+      dispatch_tag_build: false
     secrets: inherit
 
   build:

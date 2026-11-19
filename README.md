@@ -48,6 +48,8 @@ The [CI workflow](.github/workflows/ci.yml) runs the tests, then builds and depl
 - every Monday at 06:00 UTC, so the feed always runs at least 393 days ahead;
 - on a manual run.
 
+The Monday run also cuts a [release](https://github.com/mbologna/day-of-year-calendar/releases) with [auto-release](https://github.com/mbologna/auto-release) when a feature, a fix or a dependency update has landed since the last one: a `vX.Y.Z` tag and a GitHub Release whose notes list the changes. The releases are a changelog only; Pages always serves `main`.
+
 After deploying, the workflow fetches the published feed and fails if its `DTSTAMP` (the build time) is more than 8 days old. GitHub disables a public repo's scheduled workflows after 60 days without activity. Renovate's commits keep this one active. A disabled schedule runs nothing, so nothing fails either: if that ever happens, re-enable the workflow from the Actions tab.
 
 The feed tells calendar apps to refresh every 24 hours (`REFRESH-INTERVAL`, `X-PUBLISHED-TTL`).
