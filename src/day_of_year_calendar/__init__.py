@@ -24,7 +24,9 @@ CALENDAR_DESC = (
     "Where each day falls in the year: day number, percentage of the year done, days left, quarter and ISO week."
 )
 
-PAGE_URL = "https://mbologna.github.io/day-of-year-calendar/"
+# feeds.michelebologna.net proxies to this repo's GitHub Pages site, so
+# subscriptions outlive the hosting.
+PAGE_URL = "https://feeds.michelebologna.net/day-of-year-calendar/"
 ICS_NAME = "day-of-year.ics"
 
 
