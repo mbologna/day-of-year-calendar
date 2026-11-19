@@ -36,7 +36,7 @@ Notable days get an extra first line:
 
 ## How it's published
 
-The files are published on GitHub Pages and served at `day-of-year-calendar.michelebologna.net` by a Cloudflare Worker, so subscription URLs keep working wherever the files are hosted. `https://day-of-year-calendar.michelebologna.net/healthz` answers 200 `{"status":"ok",…}`, or 503 when the feed's build time (its first `DTSTAMP`) is more than 8 days old.
+The files are published on GitHub Pages and served at `day-of-year-calendar.michelebologna.net` by a Cloudflare Worker, so subscription URLs keep working wherever the files are hosted. `https://day-of-year-calendar.michelebologna.net/health` answers 200 `{"status":"ok",…}`, or 503 when the feed's build time (its first `DTSTAMP`) is more than 8 days old.
 
 The feed is a static file. Each event depends only on its own date, so a file built once a week serves the same events a per-request server would.
 
