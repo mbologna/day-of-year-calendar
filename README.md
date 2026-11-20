@@ -48,8 +48,6 @@ The [CI workflow](.github/workflows/ci.yml) runs the tests, then builds and depl
 - every Monday at 06:00 UTC, so the feed always runs at least 393 days ahead;
 - on a manual run.
 
-The Monday run also cuts a [release](https://github.com/mbologna/day-of-year-calendar/releases) with [auto-release](https://github.com/mbologna/auto-release) when a feature, a fix or a dependency update has landed since the last one: a `vX.Y.Z` tag and a GitHub Release whose notes list the changes. The releases are a changelog only; Pages always serves `main`.
-
 After deploying, the workflow fetches the published feed and fails if its `DTSTAMP` (the build time) is more than 8 days old. GitHub disables a public repo's scheduled workflows after 60 days without activity. Renovate's commits keep this one active. A disabled schedule runs nothing, so nothing fails either: if that ever happens, re-enable the workflow from the Actions tab.
 
 The feed tells calendar apps to refresh every 24 hours (`REFRESH-INTERVAL`, `X-PUBLISHED-TTL`).
@@ -97,6 +95,10 @@ uv run day-of-year-calendar check --max-age-days 8
 `tests/test_golden.py` compares the feed with `tests/fixtures/php-v1.1.0/`, the output of the PHP v1.1.0 app for eight fixed dates (leap day, year ends, the halfway day, the DST change night, and UTC evenings that are already the next day in Rome).
 
 Dependencies resolve only to releases at least 7 days old (`exclude-newer` in `pyproject.toml`). The script itself needs none.
+
+## Versioning
+
+`main` is what runs: every push to it deploys the feed to GitHub Pages. Releases follow SemVer as a changelog: the Monday run's [auto-release](https://github.com/mbologna/auto-release) tags `vX.Y.Z` from the [Conventional Commit](https://www.conventionalcommits.org/) types merged since the last tag (`feat` minor; `fix`, `perf`, `revert` patch; a breaking change major), or cuts a maintenance release when only dependency updates landed. The tag builds and deploys nothing; its [GitHub Release](https://github.com/mbologna/day-of-year-calendar/releases) lists the changes. See the [versioning standard](https://github.com/mbologna/.github/blob/main/VERSIONING.md).
 
 ## License
 
