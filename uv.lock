@@ -128,7 +128,7 @@ wheels = [
 
 [[package]]
 name = "day-of-year-calendar"
-version = "2.0.0"
+version = "0.0.0"
 source = { editable = "." }
 
 [package.dev-dependencies]

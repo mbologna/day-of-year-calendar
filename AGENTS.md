@@ -9,4 +9,4 @@ SemVer with changelog-only releases: `vX.Y.Z` tags, each with a GitHub Release l
 - A tag builds and deploys nothing: `main` is what runs, deployed to GitHub Pages on every push.
 - Never create, move or delete tags, and never edit a version number to cut a release: auto-release tags from the commit types (`feat` minor; `fix`, `perf`, `revert` patch; `!` or a `BREAKING CHANGE:` footer major).
 - Write Conventional Commit subjects; they decide the next version.
-- `version` in `pyproject.toml` is not kept in step with the tags, and nothing reads it: the tag is the version.
+- `version` in `pyproject.toml` is a placeholder and stays `0.0.0`. Nothing reads it: tags are the version.
