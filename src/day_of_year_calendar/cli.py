@@ -71,7 +71,7 @@ def main(argv: list[str] | None = None) -> int:
 
     req = urllib.request.Request(args.url, headers={"User-Agent": "day-of-year-calendar-check"})
     try:
-        with urllib.request.urlopen(req, timeout=30) as r:
+        with urllib.request.urlopen(req, timeout=30) as r:  # nosec B310 # the operator's own URL, https by default
             feed = r.read()
     except (urllib.error.URLError, OSError) as e:
         print(f"{args.url}: {e}", file=sys.stderr)

@@ -56,7 +56,7 @@ Version 1 was a PHP app on Cloud Run behind an access token. Version 2 generates
 
 ## Run it yourself
 
-The script needs Python 3.12 or later, no other packages and no network access. [uv](https://docs.astral.sh/uv/) runs it straight from this repository:
+The script needs Python 3.15 or later (uv, below, downloads it if the machine has none), no other packages and no network access. [uv](https://docs.astral.sh/uv/) runs it straight from this repository:
 
 ```sh
 uvx --from git+https://github.com/mbologna/day-of-year-calendar \
@@ -84,6 +84,7 @@ Give cron the full path to `uvx` if its `PATH` does not include it. `day-of-year
 ```sh
 uv run pytest
 uv run ruff check . && uv run ruff format --check .
+uv run pre-commit run --all-files  # ruff, mypy, bandit and file checks; `uv run pre-commit install` runs them on each commit
 
 # Build into public/, optionally as if today were another date
 uv run day-of-year-calendar build --output-dir public --today 2027-01-01
