@@ -1,0 +1,24 @@
+# Copier's record of this project's template answers. Don't edit by hand:
+# `copier update` (or Renovate's copier manager) reads it to apply
+# template changes.
+_commit: v1.5.0
+_src_path: https://github.com/mbologna/python-app-template.git
+author: Michele Bologna
+changelog_releases: true
+codecov: false
+coverage_fail_under: 98
+description: iCalendar feed that shows each day's position in the year (124/365 ·
+    33%) as an all-day event, published on GitHub Pages
+forge: github
+kind: package
+license: MIT
+main_module: true
+notifications: false
+owned_files:
+- ci
+package_name: day_of_year_calendar
+project_name: day-of-year-calendar
+pypi_publish: false
+python_floor: '3.15'
+sample_code: false
+script_target: day_of_year_calendar.cli:main

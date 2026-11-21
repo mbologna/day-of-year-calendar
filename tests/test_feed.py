@@ -11,6 +11,7 @@ import io
 import urllib.error
 import urllib.request
 from contextlib import contextmanager
+from unittest import mock
 
 import pytest
 
@@ -77,17 +78,13 @@ def test_calendar_name_is_fixed():
 @contextmanager
 def serve(body: bytes):
     """Make urlopen return body, as the published feed."""
-    original = urllib.request.urlopen
 
     @contextmanager
     def fake_urlopen(req, timeout):
         yield io.BytesIO(body)
 
-    urllib.request.urlopen = fake_urlopen
-    try:
+    with mock.patch.object(urllib.request, "urlopen", fake_urlopen):
         yield
-    finally:
-        urllib.request.urlopen = original
 
 
 def test_check_passes_on_a_fresh_published_feed(capsys):
