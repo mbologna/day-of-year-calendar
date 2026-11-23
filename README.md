@@ -97,6 +97,13 @@ uv run day-of-year-calendar check --max-age-days 8
 
 Dependencies resolve only to releases at least 7 days old (`exclude-newer` in `pyproject.toml`). The script itself needs none.
 
+## Why not an existing tool
+
+- [webcal.guru](https://webcal.guru/)'s day-number calendars have no percentage, progress bar, quarter, ISO week line or notable days.
+- [CalendarLabs](https://www.calendarlabs.com/)' "Day Numbers" calendar is empty.
+
+Checked 2026-11-23.
+
 ## Versioning
 
 `main` is what runs: every push to it deploys the feed to GitHub Pages. Releases follow SemVer as a changelog: the Monday run's [auto-release](https://github.com/mbologna/auto-release) tags `vX.Y.Z` from the [Conventional Commit](https://www.conventionalcommits.org/) types merged since the last tag (`feat` minor; `fix`, `perf`, `revert` patch; a breaking change major), or cuts a maintenance release when only dependency updates landed. The tag builds and deploys nothing; its [GitHub Release](https://github.com/mbologna/day-of-year-calendar/releases) lists the changes. See the [versioning standard](https://github.com/mbologna/.github/blob/main/VERSIONING.md).
